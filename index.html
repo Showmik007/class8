@@ -1,1 +1,1804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Learning Stages with Sidebar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+   
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column; /* Changed to column for nav on top */
+            height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
 
+        .navbar {
+            display: flex;
+            justify-content: space-between; /* Space between logo and menu */
+            align-items: center;
+            background-color: #1a1a1a; /* Background for nav */
+            padding: 10px 20px;
+            color: white;
+        }
+
+        .navbar h1 {
+            margin: 0; /* Remove margin for the logo */
+        }
+
+        .menu {
+            display: flex;
+            gap: 10px; /* Space between menu items */
+        }
+
+        .menu-item {
+    display: block;
+    padding: 10px 15px; /* Add some padding for better spacing */
+    color: white; /* White text */
+    text-align: center;
+    background-color: #1a1a1a; /* Black background */
+    border: 2px solid #27ae60; /* Green border */
+    border-radius: 8px; /* Rounded corners for a modern look */
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+}
+
+.menu-item:hover {
+    background-color: #27ae60; /* Green background on hover */
+    color: black; /* Black text on hover */
+    transform: scale(1.05); /* Slight zoom effect on hover */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Increase shadow on hover for a pop-out effect */
+}
+
+        .submenu {
+            display: none; /* Hidden by default */
+            position: absolute;
+            background-color: #333; /* Dark background for submenu */
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 10; /* Ensures submenu is above other content */
+        }
+
+        .menu-item:hover .submenu {
+            display: block; /* Show submenu on hover */
+        }
+
+        /* Other Styles (No changes to the original styles) */
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        h1 {
+            font-size: 26px;
+        }
+
+        h2 {
+            font-size: 22px;
+        }
+
+        h3 {
+            font-size: 18px;
+        }
+
+        .left, .middle, .right {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .left {
+            flex: 0 0 25%;
+            background-color: #1a1a1a;
+            border-right: 2px solid #27ae60;
+        }
+
+        .middle {
+            flex: 0 0 50%;
+            background-color: #ffffff;
+            color: #333;
+        }
+
+        .right {
+            flex: 0 0 25%;
+            background-color: #1a1a1a;
+            border-left: 2px solid #27ae60;
+            color: white;
+			
+        }
+
+        .inside {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .code {
+            height: 60%;
+            background-color: #333;
+            color: #ffffff;
+            border: 1px solid #27ae60;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: auto;
+        }
+
+        .out {
+            height: 40%;
+            background-color: #444;
+            color: #ffffff;
+            border: 1px solid #27ae60;
+            padding: 20px;
+            border-radius: 8px;
+            overflow: auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background-color: #1e8449;
+        }
+
+        .button-row {
+            display: flex;
+            flex-direction: row;
+            margin-top: 10px;
+        }
+
+        .CodeMirror {
+            width: 100%;
+            height: 60%;
+            font-size: 16px;
+            border: 1px solid #27ae60;
+            border-radius: 4px;
+        }
+
+        pre {
+            width: 100%;
+            height: 100%;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        #timer {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #27ae60;
+        }
+
+        #note {
+            margin-top: 10px;
+            color: #e74c3c;
+            font-style: italic;
+        }
+
+        .solution {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            border: 1px solid #27ae60;
+            border-radius: 8px;
+            background-color: #333;
+            color: #ffffff;
+        }
+
+        .sidebar h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .stage-list {
+            list-style-type: none;
+            padding-right: 100px;
+        }
+
+        .stage-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            color: #27ae60; /* Green list items */
+            background-color: #1a1a1a; /* Black background */
+            border: 1px solid #27ae60; /* Green border */
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .stage-list li:hover {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .stage-list li.active {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        @media screen and (max-width: 768px) {
+            .left, .middle, .right {
+                flex: 1;
+                padding: 10px;
+            }
+
+            .inside {
+                height: auto;
+            }
+
+            .code, .out {
+                height: auto;
+                margin-bottom: 15px;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+        }
+
+        .question {
+            white-space: pre;
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        .extend {
+            font-weight: bold;
+            color: #ffffff;
+        }
+		
+
+
+#noteModal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 80%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.7); /* Darker background for contrast */
+    transition: opacity 0.3s ease; /* Transition effect for opacity */
+}
+
+.modal-content {
+    background-color: #fff; /* White background for modal content */
+    margin: 10% auto; /* 10% from the top and bottom, centered */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Shadow effect */
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-height: 80%; /* Max height of the modal */
+    overflow-y: auto; /* Enable vertical scrolling */
+    animation: fadeIn 0.5s; /* Animation for showing the modal */
+}
+
+/* Animation for fadeIn effect */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px); /* Start from slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* End at normal position */
+    }
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000; /* Darker color on hover */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+ .a{
+       text-decoration: none;
+    }
+
+
+    </style>
+   <style>
+        /* Modal Container */
+        #noteModal, #solutionModal, #sudoModal {
+		
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.7); /* Darker background for contrast */
+            transition: opacity 0.3s ease; /* Transition effect for opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fff; /* White background for modal content */
+            margin: 10% auto; /* 10% from the top and bottom, centered */
+            padding: 20px;
+            border-radius: px; /* Rounded corners */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Shadow effect */
+            width: auto; /* Could be more or less, depending on screen size */
+            max-height: 80%; /* Max height of the modal */
+            overflow-y: auto; /* Enable vertical scrolling */
+            animation: fadeIn 0.5s; /* Animation for showing the modal */
+        }
+
+        /* Animation for fadeIn effect */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px); /* Start from slightly above */
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0); /* End at normal position */
+            }
+        }
+
+        /* Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000; /* Darker color on hover */
+            text-decoration: none;
+            cursor: pointer;
+        }
+	
+
+
+#timer {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.question {
+    max-width: 600px; /* Set a maximum width */
+    overflow-wrap: break-word; /* Prevent long words from causing overflow */
+    word-wrap: break-word; /* Compatibility for older browsers */
+    overflow: hidden; /* Prevent scrolling */
+    padding: 10px;
+    
+    border-radius: 5px; /* Optional: Rounded corners */
+    margin-bottom: 20px; /* Space between elements */
+    height: auto; /* Allow height to expand based on content */
+    white-space: normal; /* Allow text to wrap to the next line */
+	color: #27ae60; /* Green list items */
+    background-color: #1a1a1a; /* Black background */
+    border: 1px solid #27ae60; /* Green border */
+}
+
+.extend {
+    flex-grow: 1; /* Allow this element to fill remaining vertical space */
+    max-width: 600px; /* Set a maximum width */
+    overflow-wrap: break-word; /* Prevent long words from causing overflow */
+    word-wrap: break-word; /* Compatibility for older browsers */
+    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding: 10px;
+    border: 1px solid #ccc; /* Optional: Add border for clarity */
+    border-radius: 5px; /* Optional: Rounded corners */
+    margin-bottom: 20px; /* Space between elements */
+}
+
+
+    </style>
+
+</head>
+<body>
+
+   <div class="navbar"> 
+    <h1>Showmik Sir</h1>
+    <div class="menu">
+                
+				<div style="background-color: #27ae60; /* Green background on hover */
+    color: black; /* Black text on hover */
+    transform: scale(1.05); /* Slight zoom effect on hover */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Increase shadow on hover for a pop-out effect */
+"class="menu-item">Half Yearly</div>
+				
+        
+       
+        
+       
+    </div>
+</div>
+
+   <div class="container">
+        <div class="left">
+            <h1>Python Learning Stages</h1>
+            <div id="timer">Time: <span id="timeDisplay">00:00</span></div>
+            <div class="question" id="question"></div>
+			
+			<div class="extend" id="extend"></div>
+            
+            <div style="visibility: hidden;"id="solution" class="solution"></div>
+        </div>
+
+        <div class="middle">
+		<div class="inside">
+		<div class="code">
+		  <h2>Write code below...</h2>
+			<textarea id="pythonCode" placeholder="Enter Python code here..."></textarea>
+            <div class="button-row">
+                <button id="runButton">Run Code</button>
+				<button id="flashNoteButton">Flash Note</button>
+                <button id="solutionButton">Show Solution</button>
+                <button id="previousButton">Previous Stage</button>
+                <button id="nextButton">Next Stage</button>
+            </div>
+			<div style="display:none" id="note"></div>
+			</div>
+			<div class="out">
+            
+            <h2>Output</h2>
+            <pre id="output"></pre>
+            <div id="result" class="result"></div>
+			</div>
+			</div>
+        </div>
+		
+
+        <div class="right" id="sidebar">
+            <div class="sidebar">
+                <h2>Stages</h2>
+                <ul class="stage-list" id="stageList"></ul>
+            </div>
+        </div>
+
+        <button id="toggleSidebar">☰</button>
+    </div>
+	
+<!-- Note Modal -->
+    <div id="noteModal">
+        <div class="modal-content">
+            <span id="solutionButton" class="close" data-modal="noteModal">&times;</span>
+            <h3 style="color: #27ae60;">Note</h3>
+            <p id="noteText">This is a placeholder for the note content.</p>
+        </div>
+    </div>
+
+    <!-- Solution Modal -->
+    <div id="solutionModal">
+        <div class="modal-content">
+            <span class="close" data-modal="solutionModal">&times;</span>
+            <h3 style="color: #3498db;">Solution</h3>
+            <p id="solutionText">This is a placeholder for the solution content.</p>
+        </div>
+    </div>
+	<!-- Sudo Modal -->
+	<div id="sudoModal">
+        <div class="modal-content">
+            <span class="close" data-modal="sudoModal">&times;</span>
+            <h3 style="color: #3498db;">Sudo</h3>
+            <p id="sudoText">This is a placeholder for the sudo content.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/edit/matchbrackets.min.js"></script>
+
+<script>
+
+ document.getElementById('flashNoteButton').onclick = function() {
+        var noteText = stages[currentStage].note || "No note available.";
+        document.getElementById('noteText').innerHTML = noteText; // Set the note text
+        showModal('noteModal');
+    };
+
+    // Solution Button Event
+    document.getElementById('solutionButton').onclick = function() {
+        var solutionText = stages[currentStage].solution || "No solution available.";
+        document.getElementById('solutionText').innerHTML = solutionText.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;"); // Set the solution text
+        showModal('solutionModal');
+    };
+
+    // Sudo Button Event
+    document.getElementById('sudo').onclick = function() {
+        var sudoText = stages[currentStage].pseudocode || "No pseudocode available.";
+        document.getElementById('sudoText').innerHTML = sudoText.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;"); // Set the sudo text
+        showModal('sudoModal');
+    };
+
+    // Show Modal Function
+    function showModal(modalId) {
+        // Hide any open modals
+        document.getElementById('noteModal').style.display = 'none';
+        document.getElementById('solutionModal').style.display = 'none';
+        document.getElementById('sudoModal').style.display = 'none';
+
+        // Show the selected modal
+        document.getElementById(modalId).style.display = 'flex';
+    }
+
+    // Close Modal
+    document.querySelectorAll('.close').forEach(function(element) {
+        element.onclick = function() {
+            var modalId = element.getAttribute('data-modal');
+            document.getElementById(modalId).style.display = 'none';
+        };
+    });
+
+    // Hide Modal when clicked outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
+    };
+</script>
+
+
+    <script>
+
+var stages = [
+    // Section 1: Basic Input/Output and Arithmetic Operations
+     {
+        question: "Stage 1: Sum of Two Numbers",
+        correctOutput: "You are required to input two numbers and calculate their sum using the formula:\nSum = number1 + number2\nOutput\nEnter first number: 8\nEnter second number: 12\nSum: 20",
+        solution: "num1 = int(input('Enter first number: '))\nnum2 = int(input('Enter second number: '))\nprint('Sum: ' + str(num1 + num2))",
+        pseudocode: 
+           
+            "    DECLARE num1, num2 : INTEGER\n" +
+            "    OUTPUT 'Enter first number:'\n" +
+            "    INPUT num1\n" +
+            "    OUTPUT 'Enter second number:'\n" +
+            "    INPUT num2\n" +
+            "    DECLARE sum : INTEGER\n" +
+            "    sum = num1 + num2\n" +
+            "    OUTPUT 'Sum: ' + sum\n",
+        note: "<h2 style='color: black;'>Sum of Two Numbers Function Description</h2><br>" +
+        "<ul>" +
+            "<li><strong>Input for First Number:</strong><br>" +
+                "<ul>" +
+                    "<li><code>num1 = int(input('Enter first number: '))</code><br>" +
+                    "This line prompts the user to enter the first number.</li>" +
+                    "<li><code>input()</code> captures user input as a string.</li>" +
+                    "<li><code>int()</code> converts the string input to an integer.</li>" +
+                "</ul>" +
+            "</li><br>" +
+            "<li><strong>Input for Second Number:</strong><br>" +
+                "<ul>" +
+                    "<li><code>num2 = int(input('Enter second number: '))</code><br>" +
+                    "This line prompts the user to enter the second number.</li>" +
+                    "<li>Similar to the first input, it captures and converts the input to an integer.</li>" +
+                "</ul>" +
+            "</li><br>" +
+            "<li><strong>Output the Sum:</strong><br>" +
+                "<ul>" +
+                    "<li><code>print('Sum: ' + str(num1 + num2))</code><br>" +
+                    "This line calculates the sum of num1 and num2.</li>" +
+                    "<li><code>str()</code> converts the sum (which is an integer) back to a string for concatenation.</li>" +
+                    "<li>The final result is printed in the format: Sum: [result].</li>" +
+                "</ul>" +
+            "</li>" +
+        "</ul>"
+    },
+    {
+        question: "Stage 2: Calculate the Difference, Product, and Quotient",
+        correctOutput: "Input two numbers to compute their difference, product, and quotient using the following formulas:\nDifference = number1 - number2\nProduct = number1 * number2\nQuotient = number1 // number2 (integer division)\nOutput\nEnter first number: 20\nEnter second number: 4\nDifference: 16\nProduct: 80\nQuotient: 5",
+        solution: "num1 = int(input('Enter first number: '))\nnum2 = int(input('Enter second number: '))\nprint('Difference: ' + str(num1 - num2))\nprint('Product: ' + str(num1 * num2))\nprint('Quotient: ' + str(num1 // num2))",
+        pseudocode:  
+    "    DECLARE num1, num2 : INTEGER\n" +
+    "    OUTPUT 'Enter first number:'\n" +
+    "    INPUT num1\n" +
+    "    OUTPUT 'Enter second number:'\n" +
+    "    INPUT num2\n" +
+    "    DECLARE difference, product, quotient : INTEGER\n" +
+    "    difference = num1 - num2\n" +
+    "    product = num1 * num2\n" +
+    "    quotient = num1 // num2\n" +
+    "    OUTPUT 'Difference: ' + difference\n" +
+    "    OUTPUT 'Product: ' + product\n" +
+    "    OUTPUT 'Quotient: ' + quotient\n",
+		note: 
+    "<li><strong>Input for First Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num1 = int(input('Enter first number: '))</code><br>" +
+            "This line prompts the user to enter the first number.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>int()</code> converts the string input to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Second Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num2 = int(input('Enter second number: '))</code><br>" +
+            "This line prompts the user to enter the second number.</li>" +
+            "<li>Similar to the first input, it captures and converts the input.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Difference:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Difference: ' + str(num1 - num2))</code><br>" +
+            "This line calculates the difference between num1 and num2.</li>" +
+            "<li><code>str()</code> converts the result (which is an integer) to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Product:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Product: ' + str(num1 * num2))</code><br>" +
+            "This line calculates the product of num1 and num2.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Quotient:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Quotient: ' + str(num1 // num2))</code><br>" +
+            "This line calculates the quotient of num1 and num2 using floor division.</li>" +
+            "<li>The result is converted to a string for display.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 3: Calculate the Area and Perimeter of a Rectangle",
+        correctOutput: "Input the length and width of a rectangle to calculate its area and perimeter using these formulas:\nArea = length × width\nPerimeter = 2 × (length + width)\nOutput\nEnter length: 15\nEnter width: 10\nArea: 150\nPerimeter: 50",
+        pseudocode:  
+    "    DECLARE length, width : REAL\n" +
+    "    OUTPUT 'Enter the length of the rectangle:'\n" +
+    "    INPUT length\n" +
+    "    OUTPUT 'Enter the width of the rectangle:'\n" +
+    "    INPUT width\n" +
+    "    DECLARE area, perimeter : REAL\n" +
+    "    area = length * width\n" +
+    "    perimeter = 2 * (length + width)\n" +
+    "    OUTPUT 'Area: ' + area\n" +
+    "    OUTPUT 'Perimeter: ' + perimeter\n",
+		solution: "length = float(input('Enter the length of the rectangle: '))\nwidth = float(input('Enter the width of the rectangle: '))\narea = length * width\nperimeter = 2 * (length + width)\nprint('Area: ' + str(area))\nprint('Perimeter: ' + str(perimeter))",
+        note: "<h2 style='color: black;'>Rectangle Calculations Function Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Length:</strong><br>" +
+        "<ul>" +
+            "<li><code>length = float(input('Enter the length of the rectangle: '))</code><br>" +
+            "This line prompts the user to enter the length of the rectangle.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>float()</code> converts the string input to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Width:</strong><br>" +
+        "<ul>" +
+            "<li><code>width = float(input('Enter the width of the rectangle: '))</code><br>" +
+            "This line prompts the user to enter the width of the rectangle.</li>" +
+            "<li>Similar to the length input, it captures and converts the input to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate the Area:</strong><br>" +
+        "<ul>" +
+            "<li><code>area = length * width</code><br>" +
+            "This line calculates the area of the rectangle.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate the Perimeter:</strong><br>" +
+        "<ul>" +
+            "<li><code>perimeter = 2 * (length + width)</code><br>" +
+            "This line calculates the perimeter of the rectangle.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Area:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Area: ' + str(area))</code><br>" +
+            "This line displays the area of the rectangle.</li>" +
+            "<li><code>str()</code> converts the area (which is a float) to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Perimeter:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Perimeter: ' + str(perimeter))</code><br>" +
+            "This line displays the perimeter of the rectangle.</li>" +
+            "<li>The perimeter result is converted to a string for display.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 4: Average of Three Numbers",
+        correctOutput: "Input three numbers and calculate their average using the formula:\nAverage = (number1 + number2 + number3) / 3\nOutput\nEnter first number: 14\nEnter second number: 21\nEnter third number: 35\nAverage: 23.33",
+        pseudocode:  
+    "    DECLARE num1, num2, num3 : REAL\n" +
+    "    OUTPUT 'Enter first number:'\n" +
+    "    INPUT num1\n" +
+    "    OUTPUT 'Enter second number:'\n" +
+    "    INPUT num2\n" +
+    "    OUTPUT 'Enter third number:'\n" +
+    "    INPUT num3\n" +
+    "    DECLARE average : REAL\n" +
+    "    average = (num1 + num2 + num3) / 3\n" +
+    "    OUTPUT 'Average: ' + ROUND(average, 2)\n",
+		solution: "num1 = float(input('Enter first number: '))\nnum2 = float(input('Enter second number: '))\nnum3 = float(input('Enter third number: '))\naverage = (num1 + num2 + num3) / 3\nprint('Average: ' + str(round(average, 2)))",
+        note: "<h2 style='color: black;'>Average Calculation Function Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for First Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num1 = float(input('Enter first number: '))</code><br>" +
+            "This line prompts the user to enter the first number.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>float()</code> converts the string input to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Second Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num2 = float(input('Enter second number: '))</code><br>" +
+            "This line prompts the user to enter the second number.</li>" +
+            "<li>Similar to the first input, it captures and converts the input to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Third Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num3 = float(input('Enter third number: '))</code><br>" +
+            "This line prompts the user to enter the third number.</li>" +
+            "<li>Similar to the previous inputs, it captures and converts the input to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate the Average:</strong><br>" +
+        "<ul>" +
+            "<li><code>average = (num1 + num2 + num3) / 3</code><br>" +
+            "This line calculates the average of the three numbers.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Average:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Average: ' + str(round(average, 2)))</code><br>" +
+            "This line displays the average of the three numbers.</li>" +
+            "<li><code>round()</code> rounds the average to two decimal places.</li>" +
+            "<li><code>str()</code> converts the average (which is a float) to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 5: Power Calculation (Exponentiation)",
+        correctOutput: "Input a base number and an exponent to calculate the result using the formula:\nResult = base^exponent\nOutput\nEnter base: 3\nEnter exponent: 4\nResult: 81",
+        pseudocode:  
+    "    DECLARE base, exponent : INTEGER\n" +
+    "    OUTPUT 'Enter the base number:'\n" +
+    "    INPUT base\n" +
+    "    OUTPUT 'Enter the exponent:'\n" +
+    "    INPUT exponent\n" +
+    "    DECLARE result : INTEGER\n" +
+    "    result = base ** exponent\n" +
+    "    OUTPUT 'Result: ' + result\n",
+		solution: "base = int(input('Enter the base number: '))\nexponent = int(input('Enter the exponent: '))\nresult = base ** exponent\nprint('Result: ' + str(result))",
+        note: "<h2 style='color: black;'>Power Calculation Function Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Base Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>base = int(input('Enter the base number: '))</code><br>" +
+            "This line prompts the user to enter the base number.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>int()</code> converts the string input to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Exponent:</strong><br>" +
+        "<ul>" +
+            "<li><code>exponent = int(input('Enter the exponent: '))</code><br>" +
+            "This line prompts the user to enter the exponent.</li>" +
+            "<li>Similar to the first input, it captures and converts the input to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate the Result:</strong><br>" +
+        "<ul>" +
+            "<li><code>result = base ** exponent</code><br>" +
+            "This line calculates the result of raising the base to the power of the exponent.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Result:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Result: ' + str(result))</code><br>" +
+            "This line displays the calculated result.</li>" +
+            "<li><code>str()</code> converts the result (which is an integer) to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 6: Time Conversion (Seconds to Hours, Minutes, and Seconds)",
+        correctOutput: "Input time in seconds and convert it into hours, minutes, and remaining seconds using these formulas:\nHours = total_seconds // 3600\nRemaining minutes = (total_seconds % 3600) // 60\nRemaining seconds = total_seconds % 60\nOutput\nEnter time in seconds: 3665\n1 hours, 1 minutes, 5 seconds",
+        pseudocode:  
+    "    DECLARE seconds, hours, minutes, remaining_seconds : INTEGER\n" +
+    "    OUTPUT 'Enter the time in seconds:'\n" +
+    "    INPUT seconds\n" +
+    "    hours = seconds // 3600\n" +
+    "    remaining_seconds = seconds % 3600\n" +
+    "    minutes = remaining_seconds // 60\n" +
+    "    seconds = remaining_seconds % 60\n" +
+    "    OUTPUT hours + ' hours, ' + minutes + ' minutes, ' + seconds + ' seconds'\n",
+		solution: "seconds = int(input('Enter the time in seconds: '))\nhours = seconds // 3600\nremaining_seconds = seconds % 3600\nminutes = remaining_seconds // 60\nseconds = remaining_seconds % 60\nprint(f'{hours} hours, {minutes} minutes, {seconds} seconds')",
+        note: "<h2 style='color: black;'>Time Conversion Function Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Time in Seconds:</strong><br>" +
+        "<ul>" +
+            "<li><code>seconds = int(input('Enter the time in seconds: '))</code><br>" +
+            "This line prompts the user to enter the time in seconds.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>int()</code> converts the string input to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate Hours:</strong><br>" +
+        "<ul>" +
+            "<li><code>hours = seconds // 3600</code><br>" +
+            "This line calculates the number of hours by dividing total seconds by 3600 (the number of seconds in an hour).</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate Remaining Seconds:</strong><br>" +
+        "<ul>" +
+            "<li><code>remaining_seconds = seconds % 3600</code><br>" +
+            "This line calculates the remaining seconds after extracting hours.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate Minutes:</strong><br>" +
+        "<ul>" +
+            "<li><code>minutes = remaining_seconds // 60</code><br>" +
+            "This line calculates the number of minutes from the remaining seconds.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculate Final Remaining Seconds:</strong><br>" +
+        "<ul>" +
+            "<li><code>seconds = remaining_seconds % 60</code><br>" +
+            "This line calculates the final remaining seconds after extracting minutes.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Time:</strong><br>" +
+        "<ul>" +
+            "<li><code>print(f'{hours} hours, {minutes} minutes, {seconds} seconds')</code><br>" +
+            "This line formats and displays the final output in hours, minutes, and seconds.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 7: Temperature Conversion (Celsius to Fahrenheit)",
+        correctOutput: "Input a temperature in Celsius and convert it to Fahrenheit using the formula:\nFahrenheit = (Celsius × 9/5) + 32\nOutput\nEnter temperature in Celsius: 25\nTemperature in Fahrenheit: 77.0",
+        pseudocode:  
+    "    DECLARE celsius, fahrenheit : REAL\n" +
+    "    OUTPUT 'Enter temperature in Celsius:'\n" +
+    "    INPUT celsius\n" +
+    "    fahrenheit = (celsius * 9/5) + 32\n" +
+    "    OUTPUT 'Temperature in Fahrenheit: ' + fahrenheit\n",
+		solution: "celsius = float(input('Enter temperature in Celsius: '))\nfahrenheit = (celsius * 9/5) + 32\nprint('Temperature in Fahrenheit: ' + str(fahrenheit))",
+        note: "<h2 style='color: black;'>Celsius to Fahrenheit Conversion Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Temperature in Celsius:</strong><br>" +
+        "<ul>" +
+            "<li><code>celsius = float(input('Enter temperature in Celsius: '))</code><br>" +
+            "This line prompts the user to enter the temperature in Celsius.</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>float()</code> converts the string input to a floating-point number, allowing decimal values.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Conversion to Fahrenheit:</strong><br>" +
+        "<ul>" +
+            "<li><code>fahrenheit = (celsius * 9/5) + 32</code><br>" +
+            "This line calculates the equivalent temperature in Fahrenheit using the formula.</li>" +
+            "<li>The formula for conversion is: <code>Fahrenheit = (Celsius × 9/5) + 32</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Temperature in Fahrenheit:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Temperature in Fahrenheit: ' + str(fahrenheit))</code><br>" +
+            "This line displays the converted temperature in Fahrenheit.</li>" +
+            "<li><code>str()</code> converts the floating-point number to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 8: Simple Interest Calculation",
+        correctOutput: "Input principal, rate, and time to calculate simple interest using the formula:\nSimple Interest = (P × R × T) / 100\nOutput\nEnter principal: 2000\nEnter rate: 3\nEnter time: 5\nSimple Interest: 300.0",
+        pseudocode:  
+    "    DECLARE P, R, T, SI : REAL\n" +
+    "    OUTPUT 'Enter the principal amount:'\n" +
+    "    INPUT P\n" +
+    "    OUTPUT 'Enter the interest rate:'\n" +
+    "    INPUT R\n" +
+    "    OUTPUT 'Enter the time period in years:'\n" +
+    "    INPUT T\n" +
+    "    SI = (P * R * T) / 100\n" +
+    "    OUTPUT 'Simple Interest: ' + SI\n",
+		solution: "P = float(input('Enter the principal amount: '))\nR = float(input('Enter the interest rate: '))\nT = float(input('Enter the time period in years: '))\nSI = (P * R * T) / 100\nprint('Simple Interest: ' + str(SI))",
+        note: "<h2 style='color: black;'>Simple Interest Calculation Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Principal Amount:</strong><br>" +
+        "<ul>" +
+            "<li><code>P = float(input('Enter the principal amount: '))</code><br>" +
+            "This line prompts the user to enter the principal amount (initial sum of money).</li>" +
+            "<li><code>input()</code> captures user input as a string.</li>" +
+            "<li><code>float()</code> converts the input string to a floating-point number for accurate calculations.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Interest Rate:</strong><br>" +
+        "<ul>" +
+            "<li><code>R = float(input('Enter the interest rate: '))</code><br>" +
+            "This line prompts the user to enter the annual interest rate (percentage).</li>" +
+            "<li>Similar to the principal, the input is captured and converted to a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Time Period:</strong><br>" +
+        "<ul>" +
+            "<li><code>T = float(input('Enter the time period in years: '))</code><br>" +
+            "This line prompts the user to enter the time period in years.</li>" +
+            "<li>The input is also converted to a floating-point number.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculation of Simple Interest:</strong><br>" +
+        "<ul>" +
+            "<li><code>SI = (P * R * T) / 100</code><br>" +
+            "This line calculates the simple interest using the formula: <code>Simple Interest = (Principal × Rate × Time) / 100</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Simple Interest:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Simple Interest: ' + str(SI))</code><br>" +
+            "This line displays the calculated simple interest.</li>" +
+            "<li><code>str()</code> converts the simple interest value to a string for concatenation.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 9: Calculate BMI (Body Mass Index)",
+        correctOutput: "Input weight in kilograms and height in meters to calculate BMI using the formula:\nBMI = weight / (height × height)\nOutput\nEnter weight: 75\nEnter height: 1.8\nYour BMI is: 23.15",
+        pseudocode:  
+    "    DECLARE weight, height, BMI : REAL\n" +
+    "    OUTPUT 'Enter your weight in kg:'\n" +
+    "    INPUT weight\n" +
+    "    OUTPUT 'Enter your height in meters:'\n" +
+    "    INPUT height\n" +
+    "    BMI = weight / (height ** 2)\n" +
+    "    OUTPUT 'Your BMI is: ' + ROUND(BMI, 2)\n",
+		solution: "weight = float(input('Enter your weight in kg: '))\nheight = float(input('Enter your height in meters: '))\nBMI = weight / (height ** 2)\nprint('Your BMI is: ' + str(round(BMI, 2)))",
+        note: "<h2 style='color: black;'>BMI Calculation Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Weight:</strong><br>" +
+        "<ul>" +
+            "<li><code>weight = float(input('Enter your weight in kg: '))</code><br>" +
+            "This line prompts the user to enter their weight in kilograms.</li>" +
+            "<li><code>input()</code> captures the user's input as a string.</li>" +
+            "<li><code>float()</code> converts the input string to a floating-point number for accurate calculations.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Height:</strong><br>" +
+        "<ul>" +
+            "<li><code>height = float(input('Enter your height in meters: '))</code><br>" +
+            "This line prompts the user to enter their height in meters.</li>" +
+            "<li>Similar to the weight input, the value is captured as a string and converted to a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculation of BMI:</strong><br>" +
+        "<ul>" +
+            "<li><code>BMI = weight / (height ** 2)</code><br>" +
+            "This line calculates the Body Mass Index using the formula: <code>BMI = Weight / (Height<sup>2</sup>)</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the BMI:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Your BMI is: ' + str(round(BMI, 2)))</code><br>" +
+            "This line rounds the calculated BMI to two decimal places and displays it.</li>" +
+            "<li><code>round()</code> is used to round the value, and <code>str()</code> converts it to a string for output.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 10: Speed Calculation",
+        correctOutput: "Input distance in kilometers and time in hours, and calculate the speed using the formula:\nSpeed = Distance / Time\nOutput\nEnter distance: 150\nEnter time: 3\nSpeed: 50.0 km/h",
+        pseudocode:  
+    "    DECLARE distance, time, speed : REAL\n" +
+    "    OUTPUT 'Enter distance in kilometers:'\n" +
+    "    INPUT distance\n" +
+    "    OUTPUT 'Enter time in hours:'\n" +
+    "    INPUT time\n" +
+    "    speed = distance / time\n" +
+    "    OUTPUT 'Speed: ' + speed + ' km/h'\n",
+		solution: "distance = float(input('Enter distance in kilometers: '))\ntime = float(input('Enter time in hours: '))\nspeed = distance / time\nprint('Speed: ' + str(speed) + ' km/h')",
+        note: "<h2 style='color: black;'>Speed Calculation Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input for Distance:</strong><br>" +
+        "<ul>" +
+            "<li><code>distance = float(input('Enter distance in kilometers: '))</code><br>" +
+            "This line prompts the user to enter the distance traveled in kilometers.</li>" +
+            "<li><code>input()</code> captures the user input as a string.</li>" +
+            "<li><code>float()</code> converts the input string to a floating-point number for accurate calculations.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input for Time:</strong><br>" +
+        "<ul>" +
+            "<li><code>time = float(input('Enter time in hours: '))</code><br>" +
+            "This line prompts the user to enter the time taken in hours.</li>" +
+            "<li>Like the distance input, the value is captured as a string and converted to a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculation of Speed:</strong><br>" +
+        "<ul>" +
+            "<li><code>speed = distance / time</code><br>" +
+            "This line calculates the speed using the formula: <code>Speed = Distance / Time</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output the Speed:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Speed: ' + str(speed) + ' km/h')</code><br>" +
+            "This line displays the calculated speed in kilometers per hour (km/h).</li>" +
+            "<li><code>str()</code> converts the speed value to a string for concatenation and output.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    
+    // Section 2: If-Else and Conditional Logic
+    {
+        question: "Stage 11: Check if a Number is Positive, Negative, or Zero",
+        correctOutput: "Input a number and determine if it's positive, negative, or zero:\nCondition: num > 0 → positive, num < 0 → negative, num == 0 → zero\nOutput\nEnter a number: -12\n-12 is negative.",
+        pseudocode:  
+    "    DECLARE num : REAL\n" +
+    "    OUTPUT 'Enter a number:'\n" +
+    "    INPUT num\n" +
+    "    IF num > 0 THEN\n" +
+    "        OUTPUT num + ' is positive.'\n" +
+    "    ELSE IF num < 0 THEN\n" +
+    "        OUTPUT num + ' is negative.'\n" +
+    "    ELSE\n" +
+    "        OUTPUT num + ' is zero.'\n",
+		solution: "num = float(input('Enter a number: '))\nif num > 0:\n    print(str(num) + ' is positive.')\nelif num < 0:\n    print(str(num) + ' is negative.')\nelse:\n    print(str(num) + ' is zero.')",
+        note: "<h2 style='color: black;'>Number Classification Description</h2><br>" +
+"<ul>" +
+    "<li><strong>Input a Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num = float(input('Enter a number: '))</code><br>" +
+            "This line prompts the user to enter a number.</li>" +
+            "<li>The <code>input()</code> function captures the input as a string, and <code>float()</code> converts it to a floating-point number for accurate comparisons.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Condition for Positive Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>if num > 0:</code><br>" +
+            "Checks if the number is greater than zero.</li>" +
+            "<li><code>print(str(num) + ' is positive.')</code><br>" +
+            "If the condition is true, it prints that the number is positive.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Condition for Negative Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>elif num < 0:</code><br>" +
+            "Checks if the number is less than zero.</li>" +
+            "<li><code>print(str(num) + ' is negative.')</code><br>" +
+            "If the condition is true, it prints that the number is negative.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Condition for Zero:</strong><br>" +
+        "<ul>" +
+            "<li><code>else:</code><br>" +
+            "This branch executes if the number is neither positive nor negative, meaning it is zero.</li>" +
+            "<li><code>print(str(num) + ' is zero.')</code><br>" +
+            "Prints that the number is zero.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 12: Determine Even or Odd and Check for a Specific Condition",
+        correctOutput: "Input a number and determine if it's even or odd, and print a special message if the number is greater than 100:\nCondition: num % 2 == 0 → even, else → odd\nAdditional condition: num > 100 → additional message\nOutput\nEnter a number: 105\n105 is odd.\nAnd it's greater than 100!",
+        pseudocode:  
+    "    DECLARE num : INTEGER\n" +
+    "    OUTPUT 'Enter a number:'\n" +
+    "    INPUT num\n" +
+    "    IF num % 2 == 0 THEN\n" +
+    "        OUTPUT num + ' is even.'\n" +
+    "    ELSE\n" +
+    "        OUTPUT num + ' is odd.'\n" +
+    "    IF num > 100 THEN\n" +
+    "        OUTPUT 'And it’s greater than 100!'\n",
+		solution: "num = int(input('Enter a number: '))\nif num % 2 == 0:\n    print(str(num) + ' is even.')\nelse:\n    print(str(num) + ' is odd.')\nif num > 100:\n    print('And it’s greater than 100!')",
+        note: "<h2 style='color: black;'>Even or Odd Number Classification</h2><br>" +
+"<ul>" +
+    "<li><strong>Input a Number:</strong><br>" +
+        "<ul>" +
+            "<li><code>num = int(input('Enter a number: '))</code><br>" +
+            "Prompts the user to enter a number.</li>" +
+            "<li>The <code>input()</code> function captures the input as a string, and <code>int()</code> converts it to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Check if the Number is Even or Odd:</strong><br>" +
+        "<ul>" +
+            "<li><code>if num % 2 == 0:</code><br>" +
+            "Checks if the number is divisible by 2 without any remainder.</li>" +
+            "<li><code>print(str(num) + ' is even.')</code><br>" +
+            "If the condition is true, it prints that the number is even.</li>" +
+            "<li><code>else:</code><br>" +
+            "Executes if the number is not divisible by 2 (i.e., it is odd).</li>" +
+            "<li><code>print(str(num) + ' is odd.')</code><br>" +
+            "Prints that the number is odd.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Check if the Number is Greater than 100:</strong><br>" +
+        "<ul>" +
+            "<li><code>if num > 100:</code><br>" +
+            "Checks if the number is greater than 100.</li>" +
+            "<li><code>print('And it’s greater than 100!')</code><br>" +
+            "If true, it displays a message indicating the number is greater than 100.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 13: Grade Calculation based on Marks",
+        correctOutput: "Input marks and determine the grade based on the following criteria:\nIf marks >= 90: A, >= 75: B, >= 50: C, else: F\nOutput\nEnter marks: 85\nGrade: B",
+pseudocode:  
+    "    DECLARE marks : INTEGER\n" +
+    "    OUTPUT 'Enter your marks:'\n" +
+    "    INPUT marks\n" +
+    "    IF marks >= 90 THEN\n" +
+    "        OUTPUT 'Grade: A'\n" +
+    "    ELSE IF marks >= 75 THEN\n" +
+    "        OUTPUT 'Grade: B'\n" +
+    "    ELSE IF marks >= 50 THEN\n" +
+    "        OUTPUT 'Grade: C'\n" +
+    "    ELSE\n" +
+    "        OUTPUT 'Grade: F'\n" +
+    "    ENDIF\n" +
+    "    ENDIF\n" +
+    "    ENDIF\n",
+       
+	   solution: "marks = int(input('Enter your marks: '))\nif marks >= 90:\n    print('Grade: A')\nelif marks >= 75:\n    print('Grade: B')\nelif marks >= 50:\n    print('Grade: C')\nelse:\n    print('Grade: F')",
+        note: "<h2 style='color: black;'>Grading System Based on Marks</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Marks:</strong><br>" +
+        "<ul>" +
+            "<li><code>marks = int(input('Enter your marks: '))</code><br>" +
+            "Prompts the user to enter their marks.</li>" +
+            "<li>The <code>input()</code> function captures the input as a string, and <code>int()</code> converts it to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Grade Evaluation:</strong><br>" +
+        "<ul>" +
+            "<li><code>if marks >= 90:</code><br>" +
+            "Checks if the marks are 90 or above to assign Grade A.</li>" +
+            "<li><code>print('Grade: A')</code><br>" +
+            "Displays 'Grade: A' if the condition is met.</li>" +
+            "<li><code>elif marks >= 75:</code><br>" +
+            "If the previous condition is not met, checks if the marks are 75 or above to assign Grade B.</li>" +
+            "<li><code>print('Grade: B')</code><br>" +
+            "Displays 'Grade: B' if this condition is met.</li>" +
+            "<li><code>elif marks >= 50:</code><br>" +
+            "If the previous conditions are not met, checks if the marks are 50 or above to assign Grade C.</li>" +
+            "<li><code>print('Grade: C')</code><br>" +
+            "Displays 'Grade: C' if this condition is satisfied.</li>" +
+            "<li><code>else:</code><br>" +
+            "Executes if none of the above conditions are met, assigning Grade F.</li>" +
+            "<li><code>print('Grade: F')</code><br>" +
+            "Displays 'Grade: F' if the marks are below 50.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 14: Age Group Classification",
+        correctOutput: "Input your age and classify it into categories:\nChild (0-12), Teen (13-19), Adult (20-59), Senior (60+)\nOutput\nEnter your age: 25\nYou are classified as an Adult.",
+        pseudocode:  
+    "    DECLARE age : INTEGER\n" +
+    "    OUTPUT 'Enter your age:'\n" +
+    "    INPUT age\n" +
+    "    IF age >= 0 AND age <= 12 THEN\n" +
+    "        OUTPUT 'You are classified as a Child.'\n" +
+    "    ELSE IF age >= 13 AND age <= 19 THEN\n" +
+    "        OUTPUT 'You are classified as a Teen.'\n" +
+    "    ELSE IF age >= 20 AND age <= 59 THEN\n" +
+    "        OUTPUT 'You are classified as an Adult.'\n" +
+    "    ELSE\n" +
+    "        OUTPUT 'You are classified as a Senior'\n" +
+    "    ENDIF\n" +
+    "    ENDIF\n" +
+    "    ENDIF\n",
+
+		solution: "age = int(input('Enter your age: '))\nif age >= 0 and age <= 12:\n    print('You are classified as a Child.')\nelif age >= 13 and age <= 19:\n    print('You are classified as a Teen.')\nelif age >= 20 and age <= 59:\n    print('You are classified as an Adult.')\nelse:\n    print('You are classified as a Senior.')",
+        note: "<h2 style='color: black;'>Eligibility Check for Voting</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Age:</strong><br>" +
+        "<ul>" +
+            "<li><code>age = int(input('Enter your age: '))</code><br>" +
+            "This line prompts the user to enter their age.</li>" +
+            "<li>The <code>input()</code> function captures the input as a string, and <code>int()</code> converts it to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Eligibility Check:</strong><br>" +
+        "<ul>" +
+            "<li><code>if age >= 18:</code><br>" +
+            "Checks if the age is 18 or above to determine voting eligibility.</li>" +
+            "<li><code>print('You are eligible to vote.')</code><br>" +
+            "Displays the message 'You are eligible to vote.' if the age is 18 or older.</li>" +
+            "<li><code>else:</code><br>" +
+            "Executes if the age is below 18.</li>" +
+            "<li><code>print('You are not eligible to vote.')</code><br>" +
+            "Displays the message 'You are not eligible to vote.' if the condition is not met.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        question: "Stage 15: Voting Eligibility Check",
+        correctOutput: "Input your age and determine if you are eligible to vote:\nEligibility: age >= 18\nOutput\nEnter your age: 17\nYou are not eligible to vote.",
+        pseudocode:  
+    "    DECLARE age : INTEGER\n" +
+    "    OUTPUT 'Enter your age:'\n" +
+    "    INPUT age\n" +
+    "    IF age >= 18 THEN\n" +
+    "        OUTPUT 'You are eligible to vote.'\n" +
+    "    ELSE\n" +
+    "        OUTPUT 'You are not eligible'\n" +
+    "    ENDIF\n",
+
+		solution: "age = int(input('Enter your age: '))\nif age >= 18:\n    print('You are eligible to vote.')\nelse:\n    print('You are not eligible to vote.')",
+        note: "<h2 style='color: black;'>Voting Eligibility Check</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Age:</strong><br>" +
+        "<ul>" +
+            "<li><code>age = int(input('Enter your age: '))</code><br>" +
+            "This line prompts the user to enter their age.</li>" +
+            "<li>The <code>input()</code> function captures the input as a string, while <code>int()</code> converts it to an integer.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Eligibility Check:</strong><br>" +
+        "<ul>" +
+            "<li><code>if age >= 18:</code><br>" +
+            "Checks if the age is 18 or above to determine if the user is eligible to vote.</li>" +
+            "<li>If true, it executes <code>print('You are eligible to vote.')</code> to display the message indicating eligibility.</li>" +
+            "<li><code>else:</code><br>" +
+            "If the age is less than 18, this block executes.</li>" +
+            "<li>Displays the message <code>print('You are not eligible to vote.')</code> to indicate ineligibility.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    
+    // Section 3: Logical and Relational Conditions
+    {
+    "question": "Stage 16: Health and Fitness Goal Tracker",
+    pseudocode:  
+    "    DECLARE daily_steps : INTEGER\n" +
+    "    DECLARE water_intake : FLOAT\n" +
+    "    DECLARE exercise_duration : INTEGER\n" +
+    "    DECLARE health_status : STRING\n" +
+    "    DECLARE feedback : STRING\n" +
+    "    OUTPUT 'Enter daily steps:'\n" +
+    "    INPUT daily_steps\n" +
+    "    OUTPUT 'Enter water intake (liters):'\n" +
+    "    INPUT water_intake\n" +
+    "    OUTPUT 'Enter exercise duration (minutes):'\n" +
+    "    INPUT exercise_duration\n" +
+    "    IF daily_steps < 0 OR water_intake < 0 OR exercise_duration < 0 THEN\n" +
+    "        OUTPUT 'Invalid input. All values must be non-negative.'\n" +
+    "    ELSE\n" +
+    "        IF daily_steps >= 10000 AND water_intake >= 2 AND exercise_duration >= 30 THEN\n" +
+    "            health_status = 'Excellent'\n" +
+    "            feedback = 'Outstanding commitment to your health!'\n" +
+    "        ELSE IF daily_steps >= 8000 AND water_intake >= 1.5 AND exercise_duration >= 20 THEN\n" +
+    "            health_status = 'Good'\n" +
+    "            feedback = 'Keep up the good work! Consider increasing exercise duration to improve fitness levels.'\n" +
+    "        ELSE IF daily_steps >= 5000 AND water_intake >= 1 AND exercise_duration >= 10 THEN\n" +
+    "            health_status = 'Fair'\n" +
+    "            feedback = 'You’re doing okay, but there’s room for improvement.'\n" +
+    "        ELSE\n" +
+    "            health_status = 'Poor'\n" +
+    "            feedback = 'Consider making healthier lifestyle choices.'\n" +
+    "        ENDIF\n" +
+    "        OUTPUT 'Overall Health Status:', health_status\n" +
+    "        OUTPUT 'Feedback:', feedback\n" +
+    "    ENDIF\n",
+
+	"correctOutput": "Input daily steps, water intake, and exercise duration to analyze overall health progress:\nFormula:\nHealth Status Classification:\n- Excellent: Daily Steps >= 10000, Water Intake >= 2L, Exercise Duration >= 30 mins\n- Good: Daily Steps >= 8000, Water Intake >= 1.5L, Exercise Duration >= 20 mins\n- Fair: Daily Steps >= 5000, Water Intake >= 1L, Exercise Duration >= 10 mins\n- Poor: Otherwise\nOutput\nEnter daily steps: 8000\nEnter water intake (liters): 2.5\nEnter exercise duration (minutes): 30\nOverall Health Status: Good\nFeedback: Keep up the good work! Consider increasing exercise duration to improve fitness levels.",
+    "solution": "daily_steps = int(input('Enter daily steps: '))\nwater_intake = float(input('Enter water intake (liters): '))\nexercise_duration = int(input('Enter exercise duration (minutes): '))\nif daily_steps < 0 or water_intake < 0 or exercise_duration < 0:\n    print('Invalid input. All values must be non-negative.')\nelif daily_steps >= 10000 and water_intake >= 2 and exercise_duration >= 30:\n    health_status = 'Excellent'\n    feedback = 'Outstanding commitment to your health!'\nelif daily_steps >= 8000 and water_intake >= 1.5 and exercise_duration >= 20:\n    health_status = 'Good'\n    feedback = 'Keep up the good work! Consider increasing exercise duration to improve fitness levels.'\nelif daily_steps >= 5000 and water_intake >= 1 and exercise_duration >= 10:\n    health_status = 'Fair'\n    feedback = 'You’re doing okay, but there’s room for improvement.'\nelse:\n    health_status = 'Poor'\n    feedback = 'Consider making healthier lifestyle choices.'\nprint('Overall Health Status:', health_status)\nprint('Feedback:', feedback)",
+    "note": "<h2 style='color: black;'>Daily Health Assessment</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Values:</strong><br>" +
+        "<ul>" +
+            "<li><code>daily_steps = int(input('Enter daily steps: '))</code><br>" +
+            "This line prompts the user to input the number of daily steps taken.</li>" +
+            "<li><code>water_intake = float(input('Enter water intake (liters): '))</code><br>" +
+            "Captures the user's daily water intake in liters.</li>" +
+            "<li><code>exercise_duration = int(input('Enter exercise duration (minutes): '))</code><br>" +
+            "Takes the daily exercise duration in minutes as input.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input Validation:</strong><br>" +
+        "<ul>" +
+            "<li><code>if daily_steps < 0 or water_intake < 0 or exercise_duration < 0:</code><br>" +
+            "Checks if any of the inputs are negative, which is considered invalid.</li>" +
+            "<li>If true, displays <code>print('Invalid input. All values must be non-negative.')</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Health Assessment:</strong><br>" +
+        "<ul>" +
+            "<li><code>elif daily_steps >= 10000 and water_intake >= 2 and exercise_duration >= 30:</code><br>" +
+            "Classifies the health status as 'Excellent' if all conditions are met.</li>" +
+            "<li>Displays the feedback <code>'Outstanding commitment to your health!'</code>.</li>" +
+            "<li><code>elif daily_steps >= 8000 and water_intake >= 1.5 and exercise_duration >= 20:</code><br>" +
+            "Sets the health status to 'Good' if the conditions are met, along with appropriate feedback.</li>" +
+            "<li><code>elif daily_steps >= 5000 and water_intake >= 1 and exercise_duration >= 10:</code><br>" +
+            "Labels the health status as 'Fair' for meeting the moderate criteria.</li>" +
+            "<li><code>else:</code><br>" +
+            "Defaults to 'Poor' health status if none of the criteria are met, with suggestions for improvement.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output Results:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Overall Health Status:', health_status)</code><br>" +
+            "Displays the determined health status.</li>" +
+            "<li><code>print('Feedback:', feedback)</code><br>" +
+            "Outputs the feedback message based on the assessed health status.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+    "question": "Stage 17: Loan Repayment Schedule Calculation",
+    "correctOutput": "Input loan amount, annual interest rate, and number of years to calculate monthly payments and total repayment:\nConditions:\n1. Loan amount, annual interest rate, and number of years must be non-negative.\n2. If any input is negative, the output will state 'All inputs must be non-negative.'\nFormula:\nMonthly Payment = (Loan Amount × Monthly Interest Rate) / (1 - (1 + Monthly Interest Rate) ^ -Number of Payments)\nTotal Repayment = Monthly Payment × Number of Payments\nOutput\nEnter loan amount: 5000\nEnter annual interest rate (%): 5\nEnter number of years: 3\nMonthly payment: 149.71\nTotal repayment: 5369.58.",
+    "solution": "loan_amount = float(input('Enter loan amount: '))\nannual_interest_rate = float(input('Enter annual interest rate (%): '))\nyears = int(input('Enter number of years: '))\nif loan_amount < 0 or annual_interest_rate < 0 or years < 0:\n    print('All inputs must be non-negative.')\nelse:\n    # Calculate monthly interest rate and number of payments\n    monthly_interest_rate = (annual_interest_rate / 100) / 12\n    num_payments = years * 12\n    # Calculate monthly payment and total repayment\n    monthly_payment = (loan_amount * monthly_interest_rate) / (1 - (1 + monthly_interest_rate) ** -num_payments)\n    total_repayment = monthly_payment * num_payments\n    print('Monthly payment:', round(monthly_payment, 2))\n    print('Total repayment:', round(total_repayment, 2))",
+    "note": "<h2 style='color: black;'>Loan Payment Calculator</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Values:</strong><br>" +
+        "<ul>" +
+            "<li><code>loan_amount = float(input('Enter loan amount: '))</code><br>" +
+            "Prompts the user to enter the total loan amount they wish to borrow.</li>" +
+            "<li><code>annual_interest_rate = float(input('Enter annual interest rate (%): '))</code><br>" +
+            "Captures the annual interest rate in percentage for the loan.</li>" +
+            "<li><code>years = int(input('Enter number of years: '))</code><br>" +
+            "Requests the user to input the duration of the loan in years.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input Validation:</strong><br>" +
+        "<ul>" +
+            "<li><code>if loan_amount < 0 or annual_interest_rate < 0 or years < 0:</code><br>" +
+            "Checks if any of the inputs are negative, which is considered invalid.</li>" +
+            "<li>If true, it displays <code>print('All inputs must be non-negative.')</code>.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Calculating Monthly Payment:</strong><br>" +
+        "<ul>" +
+            "<li><code>monthly_interest_rate = (annual_interest_rate / 100) / 12</code><br>" +
+            "Calculates the monthly interest rate by dividing the annual rate by 100 and then by 12.</li>" +
+            "<li><code>num_payments = years * 12</code><br>" +
+            "Calculates the total number of monthly payments over the loan period.</li>" +
+            "<li><code>monthly_payment = (loan_amount * monthly_interest_rate) / (1 - (1 + monthly_interest_rate) ** -num_payments)</code><br>" +
+            "Calculates the monthly payment using the loan amount, monthly interest rate, and number of payments.</li>" +
+            "<li><code>total_repayment = monthly_payment * num_payments</code><br>" +
+            "Calculates the total amount to be repaid over the entire loan period.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output Results:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Monthly payment:', round(monthly_payment, 2))</code><br>" +
+            "Displays the rounded monthly payment amount to the user.</li>" +
+            "<li><code>print('Total repayment:', round(total_repayment, 2))</code><br>" +
+            "Displays the total repayment amount rounded to two decimal places.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+        "question": "Stage 18: Advanced Grade Classification with Comments",
+        "correctOutput": "Input a score and classify the grade with detailed feedback:\nFormula:\nGrade Classification:\nA: Score >= 90\nB: 80 <= Score < 90\nC: 70 <= Score < 80\nD: 60 <= Score < 70\nF: Score < 60\nOutput\nEnter score: 75\nGrade: C\nFeedback: Needs Improvement.",
+pseudocode:  
+    "    DECLARE score : FLOAT\n" +
+    "    DECLARE grade : STRING\n" +
+    "    DECLARE feedback : STRING\n" +
+    "    OUTPUT 'Enter score:'\n" +
+    "    INPUT score\n" +
+    "    IF score >= 90 THEN\n" +
+    "        grade = 'A'\n" +
+    "        feedback = 'Excellent!'\n" +
+    "    ELSE IF score >= 80 THEN\n" +
+    "        grade = 'B'\n" +
+    "        feedback = 'Good job!'\n" +
+    "    ELSE IF score >= 70 THEN\n" +
+    "        grade = 'C'\n" +
+    "        feedback = 'Needs Improvement.'\n" +
+    "    ELSE IF score >= 60 THEN\n" +
+    "        grade = 'D'\n" +
+    "        feedback = 'Barely passing.'\n" +
+    "    ELSE\n" +
+    "        grade = 'F'\n" +
+    "        feedback = 'Failing.'\n" +
+    "    ENDIF\n" +
+    "    OUTPUT 'Grade:', grade\n" +
+    "    OUTPUT 'Feedback:', feedback\n"
+,       
+	   "solution": "score = float(input('Enter score: '))\nif score >= 90:\n    grade = 'A'\n    feedback = 'Excellent!'\nelif score >= 80:\n    grade = 'B'\n    feedback = 'Good job!'\nelif score >= 70:\n    grade = 'C'\n    feedback = 'Needs Improvement.'\nelif score >= 60:\n    grade = 'D'\n    feedback = 'Barely passing.'\nelse:\n    grade = 'F'\n    feedback = 'Failing.'\nprint('Grade:', grade)\nprint('Feedback:', feedback)",
+        "note": "<h2 style='color: black;'>Grade Evaluation</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Score:</strong><br>" +
+        "<ul>" +
+            "<li><code>score = float(input('Enter score: '))</code><br>" +
+            "Prompts the user to enter their score, which is captured as a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Grade Determination:</strong><br>" +
+        "<ul>" +
+            "<li><code>if score >= 90:</code><br>" +
+            "Checks if the score is greater than or equal to 90 to assign grade 'A'.</li>" +
+            "<li><code>grade = 'A'</code><br>" +
+            "Assigns the grade 'A' if the condition is met.</li>" +
+            "<li><code>feedback = 'Excellent!'</code><br>" +
+            "Provides feedback for grade 'A'.</li>" +
+            "<li><code>elif score >= 80:</code><br>" +
+            "Checks if the score is greater than or equal to 80 to assign grade 'B'.</li>" +
+            "<li><code>grade = 'B'</code><br>" +
+            "Assigns the grade 'B' if the condition is met.</li>" +
+            "<li><code>feedback = 'Good job!'</code><br>" +
+            "Provides feedback for grade 'B'.</li>" +
+            "<li><code>elif score >= 70:</code><br>" +
+            "Checks if the score is greater than or equal to 70 to assign grade 'C'.</li>" +
+            "<li><code>grade = 'C'</code><br>" +
+            "Assigns the grade 'C' if the condition is met.</li>" +
+            "<li><code>feedback = 'Needs Improvement.'</code><br>" +
+            "Provides feedback for grade 'C'.</li>" +
+            "<li><code>elif score >= 60:</code><br>" +
+            "Checks if the score is greater than or equal to 60 to assign grade 'D'.</li>" +
+            "<li><code>grade = 'D'</code><br>" +
+            "Assigns the grade 'D' if the condition is met.</li>" +
+            "<li><code>feedback = 'Barely passing.'</code><br>" +
+            "Provides feedback for grade 'D'.</li>" +
+            "<li><code>else:</code><br>" +
+            "If none of the previous conditions are met, assigns grade 'F'.</li>" +
+            "<li><code>grade = 'F'</code><br>" +
+            "Assigns the grade 'F'.</li>" +
+            "<li><code>feedback = 'Failing.'</code><br>" +
+            "Provides feedback for grade 'F'.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output Results:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Grade:', grade)</code><br>" +
+            "Displays the determined grade to the user.</li>" +
+            "<li><code>print('Feedback:', feedback)</code><br>" +
+            "Displays the corresponding feedback based on the grade.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+    "question": "Stage 19: Comprehensive Loan Eligibility Checker",
+    "correctOutput": "Input applicant's annual income, credit score, and debt-to-income ratio to determine loan eligibility:\nConditions:\n1. Annual income must be non-negative.\n2. Credit score must be between 300 and 850.\n3. Debt-to-income ratio must be non-negative.\nIf any input is invalid, the output will state 'Invalid input. Ensure all values are reasonable.'\nFormula:\nEligibility Criteria:\nCredit Score >= 700 and Debt-to-Income Ratio < 40%: Approved\nCredit Score >= 650 and Debt-to-Income Ratio < 45%: Conditional Approval\nOtherwise: Denied\nOutput\nEnter annual income: 50000\nEnter credit score: 720\nEnter debt-to-income ratio (%): 30\nLoan Eligibility: Approved.\nReason: Meets all criteria.",
+    pseudocode:  
+    "    DECLARE loan_amount : FLOAT\n" +
+    "    DECLARE annual_interest_rate : FLOAT\n" +
+    "    DECLARE years : INTEGER\n" +
+    "    DECLARE monthly_interest_rate : FLOAT\n" +
+    "    DECLARE num_payments : INTEGER\n" +
+    "    DECLARE monthly_payment : FLOAT\n" +
+    "    DECLARE total_repayment : FLOAT\n" +
+    "    OUTPUT 'Enter loan amount:'\n" +
+    "    INPUT loan_amount\n" +
+    "    OUTPUT 'Enter annual interest rate (%):'\n" +
+    "    INPUT annual_interest_rate\n" +
+    "    OUTPUT 'Enter number of years:'\n" +
+    "    INPUT years\n" +
+    "    IF loan_amount < 0 OR annual_interest_rate < 0 OR years < 0 THEN\n" +
+    "        OUTPUT 'All inputs must be non-negative.'\n" +
+    "    ELSE\n" +
+    "        monthly_interest_rate = (annual_interest_rate / 100) / 12\n" +
+    "        num_payments = years * 12\n" +
+    "        monthly_payment = (loan_amount * monthly_interest_rate) / (1 - (1 + monthly_interest_rate) ** -num_payments)\n" +
+    "        total_repayment = monthly_payment * num_payments\n" +
+    "        OUTPUT 'Monthly payment:', ROUND(monthly_payment, 2)\n" +
+    "        OUTPUT 'Total repayment:', ROUND(total_repayment, 2)\n" +
+    "    ENDIF\n"
+,
+	"solution": "annual_income = float(input('Enter annual income: '))\ncredit_score = int(input('Enter credit score: '))\ndebt_to_income = float(input('Enter debt-to-income ratio (%): '))\nif annual_income < 0 or credit_score < 300 or credit_score > 850 or debt_to_income < 0:\n    print('Invalid input. Ensure all values are reasonable.')\nelif credit_score >= 700 and debt_to_income < 40:\n    eligibility = 'Approved'\n    reason = 'Meets all criteria.'\nelif credit_score >= 650 and debt_to_income < 45:\n    eligibility = 'Conditional Approval'\n    reason = 'Higher interest rate may apply.'\nelse:\n    eligibility = 'Denied'\n    reason = 'Does not meet eligibility criteria.'\nprint('Loan Eligibility:', eligibility)\nprint('Reason:', reason)",
+    "note": "<h2 style='color: black;'>Loan Eligibility Evaluation</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Details:</strong><br>" +
+        "<ul>" +
+            "<li><code>annual_income = float(input('Enter annual income: '))</code><br>" +
+            "Prompts the user to enter their annual income, which is captured as a float.</li>" +
+            "<li><code>credit_score = int(input('Enter credit score: '))</code><br>" +
+            "Prompts the user to enter their credit score, which is captured as an integer.</li>" +
+            "<li><code>debt_to_income = float(input('Enter debt-to-income ratio (%): '))</code><br>" +
+            "Prompts the user to enter their debt-to-income ratio, which is captured as a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input Validation:</strong><br>" +
+        "<ul>" +
+            "<li><code>if annual_income < 0 or credit_score < 300 or credit_score > 850 or debt_to_income < 0:</code><br>" +
+            "Checks if any of the input values are invalid (e.g., negative income, credit score out of range).</li>" +
+            "<li><code>print('Invalid input. Ensure all values are reasonable.')</code><br>" +
+            "Displays a message if any input values are invalid.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Eligibility Determination:</strong><br>" +
+        "<ul>" +
+            "<li><code>elif credit_score >= 700 and debt_to_income < 40:</code><br>" +
+            "Checks if the credit score is 700 or higher and the debt-to-income ratio is below 40%.</li>" +
+            "<li><code>eligibility = 'Approved'</code><br>" +
+            "Assigns eligibility status 'Approved' if the condition is met.</li>" +
+            "<li><code>reason = 'Meets all criteria.'</code><br>" +
+            "Provides reason for approval.</li>" +
+            "<li><code>elif credit_score >= 650 and debt_to_income < 45:</code><br>" +
+            "Checks if the credit score is between 650 and 699 and the debt-to-income ratio is below 45%.</li>" +
+            "<li><code>eligibility = 'Conditional Approval'</code><br>" +
+            "Assigns eligibility status 'Conditional Approval' if the condition is met.</li>" +
+            "<li><code>reason = 'Higher interest rate may apply.'</code><br>" +
+            "Provides reason for conditional approval.</li>" +
+            "<li><code>else:</code><br>" +
+            "If none of the previous conditions are met, the loan is denied.</li>" +
+            "<li><code>eligibility = 'Denied'</code><br>" +
+            "Assigns eligibility status 'Denied'.</li>" +
+            "<li><code>reason = 'Does not meet eligibility criteria.'</code><br>" +
+            "Provides reason for denial.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output Results:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Loan Eligibility:', eligibility)</code><br>" +
+            "Displays the determined loan eligibility status to the user.</li>" +
+            "<li><code>print('Reason:', reason)</code><br>" +
+            "Displays the reason for the loan eligibility decision.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"},
+    {
+    "question": "Stage 20: Dynamic Expense Tracker and Savings Analyzer",
+    "correctOutput": "Input monthly income and detailed expenses to analyze savings potential:\nConditions:\n1. Monthly income, rent, groceries, utilities, and entertainment must be non-negative.\n2. If any input is negative, the output will state 'All inputs must be non-negative.'\nFormula:\nTotal Expenses = Rent + Groceries + Utilities + Entertainment\nRemaining Savings = Monthly Income - Total Expenses\nOutput\nEnter monthly income: 4000\nEnter rent: 1200\nEnter groceries: 300\nEnter utilities: 200\nEnter entertainment: 500\nTotal expenses: 2200\nRemaining savings: 1800.\nStatus: On track to meet savings goal.",
+pseudocode:  
+    "    DECLARE annual_income : FLOAT\n" +
+    "    DECLARE credit_score : INTEGER\n" +
+    "    DECLARE debt_to_income : FLOAT\n" +
+    "    DECLARE eligibility : STRING\n" +
+    "    DECLARE reason : STRING\n" +
+    "    OUTPUT 'Enter annual income:'\n" +
+    "    INPUT annual_income\n" +
+    "    OUTPUT 'Enter credit score:'\n" +
+    "    INPUT credit_score\n" +
+    "    OUTPUT 'Enter debt-to-income ratio (%):'\n" +
+    "    INPUT debt_to_income\n" +
+    "    IF annual_income < 0 OR credit_score < 300 OR credit_score > 850 OR debt_to_income < 0 THEN\n" +
+    "        OUTPUT 'Invalid input. Ensure all values are reasonable.'\n" +
+    "    ELSE IF credit_score >= 700 AND debt_to_income < 40 THEN\n" +
+    "        eligibility = 'Approved'\n" +
+    "        reason = 'Meets all criteria.'\n" +
+    "    ELSE IF credit_score >= 650 AND debt_to_income < 45 THEN\n" +
+    "        eligibility = 'Conditional Approval'\n" +
+    "        reason = 'Higher interest rate may apply.'\n" +
+    "    ELSE\n" +
+    "        eligibility = 'Denied'\n" +
+    "        reason = 'Does not meet eligibility criteria.'\n" +
+    "    ENDIF\n" +
+    "    OUTPUT 'Loan Eligibility:', eligibility\n" +
+    "    OUTPUT 'Reason:', reason\n"
+,   
+   "solution": "monthly_income = float(input('Enter monthly income: '))\nrent = float(input('Enter rent: '))\ngroceries = float(input('Enter groceries: '))\nutilities = float(input('Enter utilities: '))\nentertainment = float(input('Enter entertainment: '))\ntotal_expenses = rent + groceries + utilities + entertainment\nif monthly_income < 0 or rent < 0 or groceries < 0 or utilities < 0 or entertainment < 0:\n    print('All inputs must be non-negative.')\nelif total_expenses > monthly_income:\n    status = 'Budget Overrun'\n    savings = 0\nelse:\n    savings = monthly_income - total_expenses\n    status = 'On track to meet savings goal'\nprint('Total expenses:', total_expenses)\nprint('Remaining savings:', savings)\nprint('Status:', status)",
+    "note": "<h2 style='color: black;'>Budget Evaluation</h2><br>" +
+"<ul>" +
+    "<li><strong>Input Details:</strong><br>" +
+        "<ul>" +
+            "<li><code>monthly_income = float(input('Enter monthly income: '))</code><br>" +
+            "Prompts the user to enter their monthly income, which is captured as a float.</li>" +
+            "<li><code>rent = float(input('Enter rent: '))</code><br>" +
+            "Prompts the user to enter their rent expense, which is captured as a float.</li>" +
+            "<li><code>groceries = float(input('Enter groceries: '))</code><br>" +
+            "Prompts the user to enter their groceries expense, which is captured as a float.</li>" +
+            "<li><code>utilities = float(input('Enter utilities: '))</code><br>" +
+            "Prompts the user to enter their utilities expense, which is captured as a float.</li>" +
+            "<li><code>entertainment = float(input('Enter entertainment: '))</code><br>" +
+            "Prompts the user to enter their entertainment expense, which is captured as a float.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Total Expenses Calculation:</strong><br>" +
+        "<ul>" +
+            "<li><code>total_expenses = rent + groceries + utilities + entertainment</code><br>" +
+            "Calculates the total expenses by summing up all individual expenses.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Input Validation:</strong><br>" +
+        "<ul>" +
+            "<li><code>if monthly_income < 0 or rent < 0 or groceries < 0 or utilities < 0 or entertainment < 0:</code><br>" +
+            "Checks if any of the input values are invalid (e.g., negative income or expenses).</li>" +
+            "<li><code>print('All inputs must be non-negative.')</code><br>" +
+            "Displays a message if any input values are invalid.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Budget Status Evaluation:</strong><br>" +
+        "<ul>" +
+            "<li><code>elif total_expenses > monthly_income:</code><br>" +
+            "Checks if total expenses exceed monthly income.</li>" +
+            "<li><code>status = 'Budget Overrun'</code><br>" +
+            "Assigns the status 'Budget Overrun' if expenses are greater than income.</li>" +
+            "<li><code>savings = 0</code><br>" +
+            "Sets savings to zero if budget is exceeded.</li>" +
+            "<li><code>else:</code><br>" +
+            "If expenses are within the budget, the program proceeds to calculate savings.</li>" +
+            "<li><code>savings = monthly_income - total_expenses</code><br>" +
+            "Calculates remaining savings by subtracting total expenses from monthly income.</li>" +
+            "<li><code>status = 'On track to meet savings goal'</code><br>" +
+            "Assigns the status indicating that the budget is on track for savings.</li>" +
+        "</ul>" +
+    "</li><br>" +
+    "<li><strong>Output Results:</strong><br>" +
+        "<ul>" +
+            "<li><code>print('Total expenses:', total_expenses)</code><br>" +
+            "Displays the total expenses to the user.</li>" +
+            "<li><code>print('Remaining savings:', savings)</code><br>" +
+            "Displays the remaining savings to the user.</li>" +
+            "<li><code>print('Status:', status)</code><br>" +
+            "Displays the budget status to the user.</li>" +
+        "</ul>" +
+    "</li>" +
+"</ul>"}
+];
+
+
+        var currentStage = 0;
+        var timer;
+        var timeElapsed = 0;
+
+        function startTimer() {
+            timer = setInterval(function() {
+                timeElapsed++;
+                var minutes = Math.floor(timeElapsed / 60);
+                var seconds = timeElapsed % 60;
+                document.getElementById('timeDisplay').innerText = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            }, 1000);
+        }
+
+        function builtinRead(x) {
+            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+                throw "File not found: '" + x + "'";
+            }
+            return Sk.builtinFiles["files"][x];
+        }
+
+        function input(promptText) {
+            var outputElement = document.getElementById('output');
+            return new Promise(function(resolve) {
+                var inputField = document.createElement('input');
+                inputField.setAttribute('type', 'text');
+                inputField.classList.add('console-input');
+                outputElement.appendChild(document.createTextNode(promptText));
+                outputElement.appendChild(inputField);
+
+                inputField.focus();
+
+                inputField.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        var userInput = inputField.value;
+                        outputElement.appendChild(document.createTextNode(userInput + '\n'));
+                        outputElement.removeChild(inputField);
+                        resolve(userInput);
+                    }
+                });
+            });
+        }
+
+        function runPythonCode() {
+            var outputElement = document.getElementById('output');
+            outputElement.innerHTML = '';
+            var code = editor.getValue();
+
+            Sk.configure({
+                output: function(text) {
+                    outputElement.appendChild(document.createTextNode(text));
+                },
+                read: builtinRead,
+                inputfun: input,
+                inputfunTakesPrompt: true
+            });
+
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            }).catch(function(err) {
+                outputElement.innerHTML = err.toString();
+            });
+
+            document.getElementById('note').innerHTML = stages[currentStage].note;
+        }
+
+        function showSolution() {
+            var solutionDiv = document.getElementById('solution');
+            solutionDiv.style.display = solutionDiv.style.display === 'block' ? 'none' : 'block';
+			var text =  stages[currentStage].solution;
+    // Replace newlines with <br> and spaces with &nbsp;
+			var formattedText = text.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;");
+			document.getElementById("solution").innerHTML = formattedText;
+        }
+
+        function updateStage() {
+            document.getElementById('question').innerText = stages[currentStage].question;
+			document.getElementById('extend').innerHTML = stages[currentStage].correctOutput.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;");
+            document.getElementById('note').innerHTML = '';
+            document.getElementById('solution').style.display = 'none';
+            editor.setValue('');
+            document.getElementById('output').innerText = '';
+        }
+
+        function nextStage() {
+            if (currentStage < stages.length - 1) {
+                currentStage++;
+                updateStage();
+            }
+        }
+
+        function previousStage() {
+            if (currentStage > 0) {
+                currentStage--;
+                updateStage();
+            }
+        }
+
+        function createStageList() {
+            var stageList = document.getElementById('stageList');
+            stages.forEach(function(stage, index) {
+                var listItem = document.createElement('li');
+                listItem.innerText = stage.question;
+                listItem.addEventListener('click', function() {
+                    currentStage = index;
+                    updateStage();
+                });
+                stageList.appendChild(listItem);
+            });
+        }
+
+        document.getElementById('runButton').addEventListener('click', runPythonCode);
+        
+        document.getElementById('nextButton').addEventListener('click', nextStage);
+        document.getElementById('previousButton').addEventListener('click', previousStage);
+
+        // Sidebar toggle
+        document.getElementById('toggleSidebar').addEventListener('click', function() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        });
+
+        // Setup CodeMirror editor
+        var editor = CodeMirror.fromTextArea(document.getElementById('pythonCode'), {
+            mode: 'python',
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true
+        });
+
+        updateStage();
+        startTimer();
+        createStageList();
+    </script>
+		
+</script>
+
+</body>
+</html>
