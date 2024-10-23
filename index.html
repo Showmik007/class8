@@ -552,19 +552,14 @@
         showModal('solutionModal');
     };
 
-    // Sudo Button Event
-    document.getElementById('sudo').onclick = function() {
-        var sudoText = stages[currentStage].pseudocode || "No pseudocode available.";
-        document.getElementById('sudoText').innerHTML = sudoText.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;"); // Set the sudo text
-        showModal('sudoModal');
-    };
+   
 
     // Show Modal Function
     function showModal(modalId) {
         // Hide any open modals
         document.getElementById('noteModal').style.display = 'none';
         document.getElementById('solutionModal').style.display = 'none';
-        document.getElementById('sudoModal').style.display = 'none';
+        
 
         // Show the selected modal
         document.getElementById(modalId).style.display = 'flex';
