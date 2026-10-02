@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>IGCSE Pseudocode Terminal</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="topbar">
+      <div class="logo">
+        <span class="logo-mark"> &gt;_ </span>
+
+        <span> IGCSE Pseudocode Terminal </span>
+
+        <span class="version"> 0478 </span>
+      </div>
+
+      <div class="toolbar">
+        <button id="examplesBtn">Examples</button>
+
+        <button id="clearBtn">Clear</button>
+
+        <button id="runBtn">
+          ▶ Run
+          <span class="shortcut"> Ctrl + Enter </span>
+        </button>
+      </div>
+    </header>
+
+    <!-- =====================================================
+         MAIN WORKSPACE
+    ====================================================== -->
+
+    <main class="workspace">
+      <!-- =================================================
+             EDITOR + TERMINAL
+        ================================================== -->
+
+      <section class="editor-panel">
+        <!-- Editor header -->
+
+        <div class="editor-header">
+          <span> main.pseudo </span>
+
+          <span id="status" class="status"> Ready </span>
+        </div>
+
+        <!-- Editor -->
+
+        <div class="editor-body">
+          <div id="lineNumbers" class="line-numbers"></div>
+
+          <div class="editor-wrap">
+            <pre id="syntaxHighlight" aria-hidden="true"></pre>
+
+            <textarea
+              id="code"
+              spellcheck="false"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Terminal -->
+
+        <section class="terminal">
+          <div class="terminal-header">
+            <span> OUTPUT </span>
+          </div>
+
+          <div id="output">
+            <div class="terminal-placeholder">Output will appear here...</div>
+          </div>
+        </section>
+      </section>
+
+      <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+      <aside class="sidebar">
+        <!-- Variables -->
+
+        <section class="sidebar-section">
+          <div class="sidebar-title">Variables</div>
+
+          <div id="variables">
+            <div class="empty-state">No variables</div>
+          </div>
+        </section>
+
+        <!-- Quick reference -->
+
+        <section class="sidebar-section">
+          <div class="sidebar-title">Quick Reference</div>
+
+          <div class="quick-reference">
+            <div>
+              <code>DECLARE</code>
+            </div>
+
+            <div>
+              <code>CONSTANT</code>
+            </div>
+
+            <div>
+              <code>INPUT</code>
+            </div>
+
+            <div>
+              <code>OUTPUT</code>
+            </div>
+
+            <br />
+
+            <div>
+              <code>IF / THEN / ELSE / ENDIF</code>
+            </div>
+
+            <div>
+              <code>CASE OF / ENDCASE</code>
+            </div>
+
+            <div>
+              <code>FOR / NEXT</code>
+            </div>
+
+            <div>
+              <code>WHILE / ENDWHILE</code>
+            </div>
+
+            <div>
+              <code>REPEAT / UNTIL</code>
+            </div>
+
+            <br />
+
+            <div>
+              <code>PROCEDURE / CALL</code>
+            </div>
+
+            <div>
+              <code>FUNCTION / RETURN</code>
+            </div>
+
+            <br />
+
+            <div>
+              <code>MOD()</code>
+            </div>
+
+            <div>
+              <code>DIV()</code>
+            </div>
+
+            <div>
+              <code>LENGTH()</code>
+            </div>
+
+            <div>
+              <code>LCASE()</code>
+            </div>
+
+            <div>
+              <code>UCASE()</code>
+            </div>
+
+            <div>
+              <code>SUBSTRING()</code>
+            </div>
+
+            <div>
+              <code>ROUND()</code>
+            </div>
+
+            <div>
+              <code>RANDOM()</code>
+            </div>
+
+            <br />
+
+            <div>
+              <code>OPENFILE</code>
+            </div>
+
+            <div>
+              <code>READFILE</code>
+            </div>
+
+            <div>
+              <code>WRITEFILE</code>
+            </div>
+
+            <div>
+              <code>CLOSEFILE</code>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <!-- =====================================================
+         EXAMPLES MODAL
+    ====================================================== -->
+
+    <div id="examplesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-heading">
+          <div class="modal-title">IGCSE 0478 Examples</div>
+
+          <button id="closeModal">✕</button>
+        </div>
+
+        <button class="example-button" data-example="basics">
+          <span> Variables & Assignment </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="inputOutput">
+          <span> INPUT / OUTPUT </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="if">
+          <span> IF / THEN / ELSE </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="case">
+          <span> CASE OF </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="for">
+          <span> FOR / NEXT </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="step">
+          <span> FOR / STEP </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="while">
+          <span> WHILE / DO </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="repeat">
+          <span> REPEAT / UNTIL </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="arrays1D">
+          <span> 1D Arrays </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="arrays2D">
+          <span> 2D Arrays </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="strings">
+          <span> String Functions </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="math">
+          <span> MOD / DIV / ROUND / RANDOM </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="procedure">
+          <span> Procedures </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="function">
+          <span> Functions </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="files">
+          <span> File Handling </span>
+
+          <span>→</span>
+        </button>
+
+        <button class="example-button" data-example="full">
+          <span> Full IGCSE Example </span>
+
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
