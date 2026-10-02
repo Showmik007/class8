@@ -796,8 +796,18 @@
 
   const STORAGE_KEY = "showmik_2210_pseudocode_workspace_v1";
   const DEFAULT_CODE = [
-    'DECLARE Name, Name2 : STRING',
-    'OUTPUT "Hello, ", Name'
+    'DECLARE Numbers : ARRAY[1:5] OF INTEGER',
+    'DECLARE i, Total : INTEGER',
+    '',
+    'Total <- 0',
+    '',
+    'FOR i <- 1 TO 5',
+    '    INPUT Numbers[i]',
+    '    OUTPUT Numbers[i]',
+    '    Total <- Total + Numbers[i]',
+    'NEXT i',
+    '',
+    'OUTPUT Total'
   ].join("\n");
 
   const textarea = document.getElementById("pseudocode");
@@ -1432,7 +1442,7 @@
       get(target, prop) {
         if (prop in target) return target[prop];
         if (typeof prop === "symbol") return undefined;
-        try { return env.get(String(prop)); } catch { return undefined; }
+        return env.get(String(prop));
       },
       set(target, prop, value) {
         env.set(String(prop), value, 0, true);
@@ -1486,6 +1496,48 @@
     }
   }
 
+  function declaredType(env, name) {
+    const key = env.key(name);
+
+    if (Object.prototype.hasOwnProperty.call(env.types, key)) {
+      return env.types[key];
+    }
+
+    if (env.parent && Object.prototype.hasOwnProperty.call(env.parent.types, key)) {
+      return env.parent.types[key];
+    }
+
+    return null;
+  }
+
+  function coerceValueForType(value, expectedType, target, lineNo) {
+    const type = String(expectedType || "").toUpperCase();
+
+    if (!type || type === "ARRAY") return value;
+
+    if (type === "INTEGER" && (typeof value !== "number" || !Number.isInteger(value))) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects INTEGER.`, lineNo);
+    }
+
+    if (type === "REAL" && (typeof value !== "number" || Number.isNaN(value))) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects REAL.`, lineNo);
+    }
+
+    if (type === "BOOLEAN" && typeof value !== "boolean") {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects BOOLEAN.`, lineNo);
+    }
+
+    if (type === "CHAR" && (typeof value !== "string" || [...value].length !== 1)) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects CHAR.`, lineNo);
+    }
+
+    if (type === "STRING" && typeof value !== "string") {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects STRING.`, lineNo);
+    }
+
+    return value;
+  }
+
   function setTarget(target, value, env, lineNo) {
     const t = target.trim();
 
@@ -1495,7 +1547,11 @@
       if (!(arr instanceof PArray)) {
         throw new PseudoRuntimeError(`"${m[1]}" is not a 2D array.`, lineNo);
       }
-      arr.set([evalExpr(m[2], env, lineNo), evalExpr(m[3], env, lineNo)], value);
+
+      const i = evalExpr(m[2], env, lineNo);
+      const j = evalExpr(m[3], env, lineNo);
+      const typed = coerceValueForType(value, arr.type, target, lineNo);
+      arr.set([i, j], typed);
       return;
     }
 
@@ -1505,7 +1561,10 @@
       if (!(arr instanceof PArray)) {
         throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
       }
-      arr.set([evalExpr(m[2], env, lineNo)], value);
+
+      const i = evalExpr(m[2], env, lineNo);
+      const typed = coerceValueForType(value, arr.type, target, lineNo);
+      arr.set([i], typed);
       return;
     }
 
@@ -1513,7 +1572,12 @@
       throw new PseudoRuntimeError(`Invalid assignment target "${target}".`, lineNo);
     }
 
-    env.set(t, value, lineNo, true);
+    if (!env.has(t)) {
+      throw new PseudoRuntimeError(`Unknown identifier: ${t}`, lineNo);
+    }
+
+    const typed = coerceValueForType(value, declaredType(env, t), target, lineNo);
+    env.set(t, typed, lineNo, true);
   }
 
   function declareArray(rest, env, lineNo) {
@@ -1608,44 +1672,96 @@
     writeOutput(values.map(v => v === null || v === undefined ? "" : String(v)).join(""));
   }
 
+  function getTargetType(target, env, lineNo) {
+    const t = target.trim();
+    let m = t.match(/^([A-Za-z][A-Za-z0-9]*)$/);
+
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const key = env.key(m[1]);
+      if (Object.prototype.hasOwnProperty.call(env.types, key)) {
+        return env.types[key];
+      }
+      if (env.parent && Object.prototype.hasOwnProperty.call(env.parent.types, key)) {
+        return env.parent.types[key];
+      }
+      return null;
+    }
+
+    m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
+      }
+      const index = evalExpr(m[2], env, lineNo);
+      arr.normalizeIndex(index, 0);
+      return arr.type;
+    }
+
+    m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^,\[\]]+)\s*,\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
+      }
+      arr.normalizeIndex(evalExpr(m[2], env, lineNo), 0);
+      arr.normalizeIndex(evalExpr(m[3], env, lineNo), 1);
+      return arr.type;
+    }
+
+    throw new PseudoRuntimeError(`Invalid INPUT target "${target}".`, lineNo);
+  }
+
+  function convertInputValue(valueText, type, target, lineNo) {
+    const raw = valueText.trim();
+
+    switch (String(type || "STRING").toUpperCase()) {
+      case "INTEGER":
+        if (raw === "" || !/^[-+]?\d+$/.test(raw)) {
+          throw new PseudoRuntimeError(`Expected INTEGER for "${target}".`, lineNo);
+        }
+        return Number(raw);
+
+      case "REAL":
+        if (raw === "" || Number.isNaN(Number(raw))) {
+          throw new PseudoRuntimeError(`Expected REAL for "${target}".`, lineNo);
+        }
+        return Number(raw);
+
+      case "BOOLEAN":
+        if (/^TRUE$/i.test(raw)) return true;
+        if (/^FALSE$/i.test(raw)) return false;
+        throw new PseudoRuntimeError(`Expected TRUE or FALSE for "${target}".`, lineNo);
+
+      case "CHAR":
+        if ([...valueText].length !== 1) {
+          throw new PseudoRuntimeError(`Expected one character for "${target}".`, lineNo);
+        }
+        return valueText;
+
+      case "STRING":
+      default:
+        return valueText;
+    }
+  }
+
   async function inputInto(target, env, lineNo) {
-    const simple = target.match(/^([A-Za-z][A-Za-z0-9]*)$/);
-
-    if (simple && !env.has(simple[1])) {
-      throw new PseudoRuntimeError(`Unknown identifier: ${simple[1]}`, lineNo);
-    }
-
-    const valueText = await requestInput("");
-    let value = valueText;
-
-    let type = null;
-    if (simple && env.has(simple[1])) {
-      try {
-        type = env.types[env.key(simple[1])] || null;
-      } catch {}
-    }
-
-    if (type === "INTEGER") {
-      if (valueText.trim() === "" || !/^[-+]?\d+$/.test(valueText.trim())) {
-        throw new PseudoRuntimeError(`Expected INTEGER for "${target}".`, lineNo);
-      }
-      value = Number(valueText);
-    } else if (type === "REAL") {
-      if (valueText.trim() === "" || Number.isNaN(Number(valueText))) {
-        throw new PseudoRuntimeError(`Expected REAL for "${target}".`, lineNo);
-      }
-      value = Number(valueText);
-    } else if (type === "BOOLEAN") {
-      if (/^TRUE$/i.test(valueText.trim())) value = true;
-      else if (/^FALSE$/i.test(valueText.trim())) value = false;
-      else throw new PseudoRuntimeError(`Expected TRUE or FALSE for "${target}".`, lineNo);
-    } else if (type === "CHAR") {
-      if ([...valueText].length !== 1) {
-        throw new PseudoRuntimeError(`Expected one character for "${target}".`, lineNo);
-      }
-      value = valueText;
-    }
-
+    /*
+      INPUT respects the declared type of scalar variables and ARRAY elements.
+      This prevents numeric ARRAY INPUT values from becoming strings.
+    */
+    const type = getTargetType(target, env, lineNo);
+    const valueText = await requestInput("INPUT > ");
+    const value = convertInputValue(valueText, type, target, lineNo);
     setTarget(target, value, env, lineNo);
   }
 
