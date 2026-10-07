@@ -1,0 +1,3420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d11">
+  <title>Showmik Sir — 2210 Pseudocode Compiler</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #090c10;
+      --panel: #141920;
+      --panel-2: #1a2028;
+      --editor: #0d1117;
+      --terminal: #070a0e;
+      --border: #28313b;
+      --border-soft: #20262e;
+      --text: #f2f5f8;
+      --muted: #8c97a5;
+      --accent: #27ae60;
+      --accent-2: #3498db;
+      --yellow: #f4c44e;
+      --purple: #be8cff;
+      --orange: #ff9f66;
+      --red: #e86b5e;
+      --cyan: #52d6c7;
+      --tab: #10141a;
+      --tab-active: #1d242d;
+      --danger: #a83d34;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body { min-height: 100vh; overflow-x: hidden; }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      min-height: 61px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 16px;
+      background: #0a0d11;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 800 14px/1 Consolas, monospace;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 17px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .save-state {
+      color: #6fd496;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .new-tab-top {
+      min-height: 35px;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #1a2028;
+      color: #dfe5ea;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .new-tab-top:hover {
+      background: #262d36;
+    }
+
+    /* Tabs */
+    .tab-strip {
+      min-height: 44px;
+      display: flex;
+      align-items: stretch;
+      gap: 2px;
+      padding: 6px 8px 0;
+      background: #0f1319;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .tab {
+      min-width: 148px;
+      max-width: 235px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 7px 0 12px;
+      border: 1px solid var(--border-soft);
+      border-bottom: 0;
+      border-radius: 9px 9px 0 0;
+      background: var(--tab);
+      color: #9ba6b2;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    .tab.active {
+      position: relative;
+      background: var(--tab-active);
+      border-color: var(--border);
+      color: #f1f5f8;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .tab-icon {
+      color: #8aaeff;
+      font: 700 11px/1 Consolas, monospace;
+    }
+
+    .tab-name {
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 11px;
+    }
+
+    .tab-dirty {
+      display: none;
+      color: var(--yellow);
+      font-size: 10px;
+    }
+
+    .tab.dirty .tab-dirty { display: inline; }
+
+    .tab-close {
+      width: 23px;
+      height: 23px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 5px;
+      padding: 0;
+      background: transparent;
+      color: #76808c;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .tab-close:hover {
+      background: #343b45;
+      color: white;
+    }
+
+    .tab-plus {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      margin-left: 3px;
+      border: 0;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: #9ca6b2;
+      font-size: 21px;
+      cursor: pointer;
+    }
+
+    .tab-plus:hover {
+      background: #191f26;
+      color: white;
+    }
+
+    /* Workspace */
+    .main {
+      flex: 1;
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, .82fr);
+      gap: 12px;
+    }
+
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 0 12px 35px rgba(0,0,0,.25);
+    }
+
+    .editor-panel, .console-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 630px;
+    }
+
+    .panel-header {
+      min-height: 49px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .panel-label {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .mode-badge {
+      padding: 4px 7px;
+      border: 1px solid #2e4557;
+      border-radius: 999px;
+      color: #7fc1ef;
+      background: #101a22;
+      font: 700 9px/1 Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    .editor-wrap, .console-wrap {
+      flex: 1;
+      min-height: 0;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #pseudocode {
+      display: none;
+    }
+
+    /* CodeMirror */
+    .CodeMirror {
+      flex: 1;
+      min-height: 475px;
+      width: 100%;
+      height: auto;
+      border: 1px solid #303944;
+      border-radius: 10px;
+      background: var(--editor);
+      color: #e9edf1;
+      font: 15px/1.65 "Courier New", Consolas, monospace;
+      overflow: hidden;
+    }
+
+    .CodeMirror-focused {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(39,174,96,.12);
+    }
+
+    .CodeMirror-gutters {
+      background: #0a0e13;
+      border-right: 1px solid #2a323b;
+    }
+
+    .CodeMirror-linenumber {
+      color: #626d79;
+      padding: 0 10px 0 8px;
+    }
+
+    .CodeMirror-activeline-background {
+      background: rgba(62, 111, 86, .08);
+    }
+
+    .CodeMirror-cursor {
+      border-left: 2px solid #74e6a1;
+    }
+
+    .CodeMirror-selected {
+      background: rgba(66,126,184,.30) !important;
+    }
+
+    .indent-guide-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .indent-guide {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      opacity: .55;
+    }
+
+    .indent-guide.level-1 { background: rgba(39,174,96,.65); }
+    .indent-guide.level-2 { background: rgba(52,152,219,.60); }
+    .indent-guide.level-3 { background: rgba(241,196,15,.58); }
+    .indent-guide.level-4 { background: rgba(155,89,182,.58); }
+    .indent-guide.level-5 { background: rgba(26,188,156,.58); }
+    .indent-guide.level-6 { background: rgba(230,126,34,.58); }
+    .indent-guide.level-7 { background: rgba(39,174,96,.48); }
+    .indent-guide.level-8 { background: rgba(52,152,219,.48); }
+
+    /* Pseudocode highlighting */
+    .cm-s-2210 span.cm-keyword { color: var(--yellow); font-weight: 700; }
+    .cm-s-2210 span.cm-type { color: #65b8ff; font-weight: 700; }
+    .cm-s-2210 span.cm-builtin { color: var(--cyan); }
+    .cm-s-2210 span.cm-variable { color: #e7ebef; }
+    .cm-s-2210 span.cm-variable-2 { color: #8fd8ff; }
+    .cm-s-2210 span.cm-number { color: #72b8ff; }
+    .cm-s-2210 span.cm-string { color: #73dda0; }
+    .cm-s-2210 span.cm-comment { color: #77818d; font-style: italic; }
+    .cm-s-2210 span.cm-operator { color: var(--red); font-weight: 700; }
+    .cm-s-2210 span.cm-atom { color: var(--purple); font-weight: 700; }
+    .cm-s-2210 span.cm-meta { color: #cf9dff; }
+    .cm-s-2210 span.cm-def { color: #71df99; font-weight: 700; }
+
+    /* Hint dropdown */
+    .CodeMirror-hints {
+      min-width: 220px;
+      max-height: 270px;
+      padding: 4px 0;
+      background: #171c22;
+      color: white;
+      border: 1px solid #3b4651;
+      border-radius: 8px;
+      box-shadow: 0 14px 32px rgba(0,0,0,.55);
+      font: 14px/1.5 "Courier New", Consolas, monospace;
+    }
+
+    .CodeMirror-hint {
+      padding: 7px 12px;
+      color: #e4e9ee;
+    }
+
+    li.CodeMirror-hint-active {
+      background: var(--accent);
+      color: white;
+    }
+
+
+    /* Output / Flowchart viewer */
+    .viewer-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .viewer-btn {
+      min-height: 28px;
+      padding: 5px 9px;
+      border: 1px solid #34404b;
+      border-radius: 7px;
+      background: #20262e;
+      color: #aeb8c3;
+      font-size: 9px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .viewer-btn:hover {
+      background: #2b333d;
+      color: white;
+    }
+
+    .viewer-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .flowchart-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      padding: 8px;
+      background: rgba(10,13,17,.94);
+      border-bottom: 1px solid #252d36;
+      backdrop-filter: blur(8px);
+    }
+
+    .flow-tool-btn {
+      min-height: 30px;
+      padding: 6px 9px;
+      border: 1px solid #34404b;
+      border-radius: 7px;
+      background: #20262e;
+      color: #dce3e9;
+      font-size: 9px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .flow-tool-btn:hover {
+      background: #303842;
+    }
+
+    .flow-tool-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .flow-tool-btn.primary:hover {
+      background: #1f8e4d;
+    }
+
+    #flowchartWrap {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      overflow: auto;
+      border: 1px solid #2b333e;
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at 1px 1px, rgba(255,255,255,.05) 1px, transparent 0) 0 0 / 18px 18px,
+        #090c10;
+    }
+
+    #flowchart {
+      min-width: 760px;
+      min-height: 100%;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #flowchart svg {
+      max-width: none;
+      height: auto;
+    }
+
+    .flowchart-empty {
+      width: 100%;
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .flowchart-empty strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #d9e0e6;
+      font-size: 14px;
+    }
+
+    /* Toolbars */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .tool-btn {
+      min-height: 39px;
+      padding: 9px 12px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tool-btn:hover { background: #1f8e4d; }
+
+    .tool-btn.secondary {
+      background: #252c35;
+      border-color: #333d48;
+      color: #dde3e8;
+    }
+
+    .tool-btn.secondary:hover { background: #303843; }
+
+    .tool-btn.danger {
+      background: var(--danger);
+      border-color: #b34a40;
+    }
+
+    .tool-btn.danger:hover { background: #bc4b41; }
+
+    .shortcut {
+      margin-left: auto;
+      align-self: center;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    /* Console */
+    #output {
+      flex: 1;
+      min-height: 475px;
+      width: 100%;
+      margin: 0;
+      padding: 15px;
+      overflow: auto;
+      border: 1px solid #2b333e;
+      border-radius: 10px;
+      background: var(--terminal);
+      color: #e8edf2;
+      font: 14px/1.65 Consolas, "Courier New", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .console-input {
+      width: 100%;
+      margin: 5px 0 0;
+      padding: 8px 10px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      outline: none;
+      background: #141920;
+      color: white;
+      font: 14px Consolas, "Courier New", monospace;
+    }
+
+    .console-input:focus {
+      box-shadow: 0 0 0 2px rgba(39,174,96,.12);
+    }
+
+    .console-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .output-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .output-toggle input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toggle-track {
+      width: 34px;
+      height: 18px;
+      padding: 2px;
+      border-radius: 999px;
+      background: #38414c;
+    }
+
+    .toggle-thumb {
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transform: translateX(0);
+      transition: transform .18s ease;
+    }
+
+    .output-toggle input:checked + .toggle-track { background: var(--accent); }
+    .output-toggle input:checked + .toggle-track .toggle-thumb {
+      transform: translateX(16px);
+    }
+
+    .footer-note {
+      padding: 0 12px 10px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 9px;
+    }
+
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      .editor-panel, .console-panel { min-height: 530px; }
+      .CodeMirror, #output { min-height: 355px; }
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        min-height: 56px;
+        padding: 8px 10px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        border-radius: 8px;
+        font-size: 12px;
+      }
+
+      .brand-title { font-size: 14px; }
+      .brand-subtitle, .save-state { display: none; }
+
+      .new-tab-top {
+        min-height: 33px;
+        padding: 6px 8px;
+      }
+
+      .main {
+        padding: 7px;
+        gap: 8px;
+      }
+
+      .panel { border-radius: 10px; }
+
+      .editor-panel, .console-panel { min-height: 0; }
+      .editor-wrap, .console-wrap { padding: 8px; }
+
+      .CodeMirror, #output {
+        min-height: 295px;
+        font-size: 13px;
+      }
+      #flowchart {
+        min-width: 680px;
+        padding: 12px;
+      }
+
+      #flowchartWrap {
+        min-height: 295px;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tool-btn { width: 100%; }
+      .shortcut {
+        grid-column: 1 / -1;
+        margin-left: 0;
+        text-align: center;
+      }
+
+      .toggle-label { display: none; }
+
+      .tab {
+        min-width: 120px;
+        max-width: 175px;
+      }
+
+      .mode-badge { display: none; }
+    }
+
+    @media (max-width: 360px) {
+      .toolbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">2210</div>
+      <div>
+        <h1 class="brand-title">Showmik Sir — 2210 Pseudocode Compiler</h1>
+        <p class="brand-subtitle">Cambridge O Level Computer Science • 2026–2028 pseudocode style</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <span id="saveState" class="save-state">Saved in browser</span>
+      <button id="newTabTop" class="new-tab-top" type="button">＋ New Tab</button>
+    </div>
+  </header>
+
+  <nav id="tabStrip" class="tab-strip" aria-label="Pseudocode files">
+    <button id="tabPlus" class="tab-plus" type="button" title="New tab">＋</button>
+  </nav>
+
+  <main id="mainWorkspace" class="main">
+    <section class="panel editor-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Pseudocode Editor</h2>
+          <div id="editorFileName" class="panel-label">main.pseudo</div>
+        </div>
+        <span class="mode-badge">CAMBRIDGE 2210</span>
+      </div>
+
+      <div class="editor-wrap">
+        <textarea id="pseudocode" spellcheck="false"></textarea>
+
+        <div class="toolbar">
+          <button id="runBtn" class="tool-btn" type="button">▶ Compile &amp; Run</button>
+          <button id="flowchartBtn" class="tool-btn secondary" type="button">◇ Flowchart</button>
+          <button id="checkBtn" class="tool-btn secondary" type="button">✓ Check Syntax</button>
+          <button id="clearOutputBtn" class="tool-btn secondary" type="button">Clear Output</button>
+          <button id="clearCodeBtn" class="tool-btn secondary" type="button">Clear Code</button>
+          <button id="copyBtn" class="tool-btn secondary" type="button">Copy Code</button>
+          <button id="downloadBtn" class="tool-btn secondary" type="button">Download</button>
+          <button id="renameBtn" class="tool-btn secondary" type="button">Rename Tab</button>
+          <button id="resetBtn" class="tool-btn danger" type="button">Reset Code</button>
+          <span class="shortcut">Ctrl + Enter / ⌘ + Enter = Compile &amp; Run • Ctrl + Space = Autocomplete</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="consolePanel" class="panel console-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title" id="viewerTitle">Compiler Output</h2>
+          <div class="panel-label" id="viewerSubtitle">Output, INPUT prompts, and syntax errors</div>
+        </div>
+
+        <div class="viewer-controls">
+          <button id="outputViewBtn" class="viewer-btn active" type="button">Output</button>
+          <button id="flowchartViewBtn" class="viewer-btn" type="button">Flowchart</button>
+
+          <label class="output-toggle" title="Show or hide compiler panel">
+            <input id="outputVisibility" type="checkbox" checked>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">Visible</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="console-wrap">
+        <pre id="output"></pre>
+
+        <div id="flowchartWrap" hidden>
+          <div class="flowchart-toolbar">
+            <button id="downloadFlowchartSvgBtn" class="flow-tool-btn" type="button">Download SVG</button>
+            <button id="downloadFlowchartPdfBtn" class="flow-tool-btn primary" type="button">Download PDF</button>
+          </div>
+          <div id="flowchart"></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Local browser workspace • No tasks or question bank included
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     Cambridge 2210 pseudocode language definition
+     ========================================================= */
+
+  const KEYWORDS = [
+    "DECLARE","CONSTANT","INPUT","OUTPUT","IF","THEN","ELSE","ENDIF",
+    "CASE","OF","OTHERWISE","ENDCASE","FOR","TO","STEP","NEXT",
+    "REPEAT","UNTIL","WHILE","DO","ENDWHILE","PROCEDURE","ENDPROCEDURE",
+    "FUNCTION","RETURNS","ENDFUNCTION","RETURN","CALL",
+    "OPENFILE","FOR","READ","WRITE","READFILE","WRITEFILE","CLOSEFILE"
+  ];
+
+  const TYPES = ["INTEGER","REAL","CHAR","STRING","BOOLEAN"];
+  const BUILTINS = [
+    "LENGTH","LCASE","UCASE","SUBSTRING","ROUND","RANDOM","DIV","MOD"
+  ];
+  const ATOMS = ["TRUE","FALSE"];
+
+  CodeMirror.defineMode("cambridge-2210", function () {
+    return {
+      startState: function () {
+        return {};
+      },
+      token: function (stream) {
+        if (stream.sol()) {
+          stream.eatSpace();
+        }
+
+        if (stream.match("//")) {
+          stream.skipToEnd();
+          return "comment";
+        }
+
+        if (stream.match(/[‘'“"][^‘'“"]*[’'”"]/)) {
+          return "string";
+        }
+
+        if (stream.match(/-?\d+(?:\.\d+)?/)) {
+          return "number";
+        }
+
+        if (stream.match(/←|<=|>=|<>|=|<|>|\+|-|\*|\/|\^/)) {
+          return "operator";
+        }
+
+        if (stream.match(/<[^>]+>/)) {
+          return "meta";
+        }
+
+        if (stream.match(/[A-Za-z][A-Za-z0-9]*/)) {
+          const word = stream.current();
+          const upper = word.toUpperCase();
+
+          if (TYPES.indexOf(upper) !== -1) return "type";
+          if (KEYWORDS.indexOf(upper) !== -1) return "keyword";
+          if (BUILTINS.indexOf(upper) !== -1) return "builtin";
+          if (ATOMS.indexOf(upper) !== -1) return "atom";
+
+          /* Procedure / function identifier after definition keywords */
+          const before = stream.string.slice(0, stream.start).toUpperCase();
+          if (/\b(PROCEDURE|FUNCTION)\s*$/.test(before)) return "def";
+
+          return "variable";
+        }
+
+        stream.next();
+        return null;
+      }
+    };
+  });
+
+  const COMPLETIONS = [
+    ...KEYWORDS, ...TYPES, ...BUILTINS, ...ATOMS,
+    "AND","OR","NOT",
+    "ENDPROCEDURE","ENDFUNCTION",
+    "TRUE","FALSE"
+  ];
+
+  function pseudocodeHint(cm) {
+    const cur = cm.getCursor();
+    const line = cm.getLine(cur.line);
+    const before = line.slice(0, cur.ch);
+    const match = before.match(/[A-Za-z][A-Za-z0-9]*$/);
+    if (!match) return null;
+
+    const token = match[0];
+    const list = COMPLETIONS
+      .filter(x => x.toLowerCase().startsWith(token.toLowerCase()))
+      .sort((a,b) => a.localeCompare(b));
+
+    if (!list.length) return null;
+
+    return {
+      list,
+      from: CodeMirror.Pos(cur.line, cur.ch - token.length),
+      to: CodeMirror.Pos(cur.line, cur.ch)
+    };
+  }
+
+  /* =========================================================
+     Local workspace / tabs
+     ========================================================= */
+
+  const STORAGE_KEY = "showmik_2210_pseudocode_workspace_v1";
+  const DEFAULT_CODE = [
+    'DECLARE Numbers : ARRAY[1:5] OF INTEGER',
+    'DECLARE i, Total : INTEGER',
+    '',
+    'Total <- 0',
+    '',
+    'FOR i <- 1 TO 5',
+    '    INPUT Numbers[i]',
+    '    OUTPUT Numbers[i]',
+    '    Total <- Total + Numbers[i]',
+    'NEXT i',
+    '',
+    'OUTPUT Total'
+  ].join("\n");
+
+  const textarea = document.getElementById("pseudocode");
+  const output = document.getElementById("output");
+  const tabStrip = document.getElementById("tabStrip");
+  const tabPlus = document.getElementById("tabPlus");
+  const editorFileName = document.getElementById("editorFileName");
+  const saveState = document.getElementById("saveState");
+  const consolePanel = document.getElementById("consolePanel");
+  const outputVisibility = document.getElementById("outputVisibility");
+  const mainWorkspace = document.getElementById("mainWorkspace");
+  const outputViewBtn = document.getElementById("outputViewBtn");
+  const flowchartViewBtn = document.getElementById("flowchartViewBtn");
+  const flowchartWrap = document.getElementById("flowchartWrap");
+  const flowchart = document.getElementById("flowchart");
+  const viewerTitle = document.getElementById("viewerTitle");
+  const viewerSubtitle = document.getElementById("viewerSubtitle");
+
+  let tabs = [];
+  let activeTabId = null;
+  let editor = null;
+  let saveTimer = null;
+
+  function id() {
+    return "p-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function makeWorkspace() {
+    const firstId = id();
+    return {
+      tabs: [{
+        id: firstId,
+        name: "main.pseudo",
+        code: [
+          'DECLARE Name, Name2 : STRING',
+          'OUTPUT "Hello, ", Name'
+        ].join("\n"),
+        dirty: false
+      }],
+      activeTabId: firstId,
+      outputVisible: true
+    };
+  }
+
+  function loadWorkspace() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return makeWorkspace();
+
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.tabs) || !data.tabs.length) return makeWorkspace();
+
+      data.tabs = data.tabs.map((t, i) => ({
+        id: t.id || id(),
+        name: t.name || `untitled-${i + 1}.pseudo`,
+        code: typeof t.code === "string" ? t.code : "",
+        dirty: Boolean(t.dirty)
+      }));
+
+      if (!data.tabs.some(t => t.id === data.activeTabId)) {
+        data.activeTabId = data.tabs[0].id;
+      }
+
+      data.outputVisible = data.outputVisible !== false;
+      return data;
+    } catch {
+      return makeWorkspace();
+    }
+  }
+
+  function saveWorkspace() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        tabs,
+        activeTabId,
+        outputVisible: outputVisibility.checked
+      }));
+      saveState.textContent = "Saved in browser";
+    } catch {
+      saveState.textContent = "Browser storage unavailable";
+    }
+  }
+
+  function scheduleSave() {
+    saveState.textContent = "Saving…";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveWorkspace, 300);
+  }
+
+  function activeTab() {
+    return tabs.find(t => t.id === activeTabId) || tabs[0];
+  }
+
+  function fileNameSafe(name) {
+    name = name.trim().replace(/[<>:"/\\\\|?*\x00-\x1F]/g, "_");
+    if (!name) name = "untitled.pseudo";
+    if (!/\.(pseudo|txt)$/i.test(name)) name += ".pseudo";
+    return name.slice(0, 80);
+  }
+
+  function renderTabs() {
+    tabStrip.querySelectorAll(".tab").forEach(x => x.remove());
+
+    tabs.forEach(tab => {
+      const node = document.createElement("div");
+      node.className =
+        "tab" +
+        (tab.id === activeTabId ? " active" : "") +
+        (tab.dirty ? " dirty" : "");
+
+      const icon = document.createElement("span");
+      icon.className = "tab-icon";
+      icon.textContent = "PS";
+
+      const name = document.createElement("span");
+      name.className = "tab-name";
+      name.textContent = tab.name;
+
+      const dirty = document.createElement("span");
+      dirty.className = "tab-dirty";
+      dirty.textContent = "●";
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "tab-close";
+      close.title = "Close tab";
+      close.textContent = "×";
+
+      node.append(icon, name, dirty, close);
+
+      node.addEventListener("click", function (e) {
+        if (e.target === close) {
+          closeTab(tab.id);
+        } else {
+          switchTab(tab.id);
+        }
+      });
+
+      tabStrip.insertBefore(node, tabPlus);
+    });
+
+    const current = tabStrip.querySelector(".tab.active");
+    if (current) {
+      current.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  }
+
+  function switchTab(id) {
+    const found = tabs.find(t => t.id === id);
+    if (!found) return;
+
+    activeTabId = id;
+    editor.setValue(found.code);
+    editor.clearHistory();
+    editorFileName.textContent = found.name;
+    output.textContent = "";
+    flowchart.innerHTML = "";
+    showOutputView();
+    renderTabs();
+    scheduleSave();
+    editor.refresh();
+    updateIndentGuides();
+    editor.focus();
+  }
+
+  function newTab() {
+    const next = {
+      id: id(),
+      name: `untitled-${tabs.length + 1}.pseudo`,
+      code: '// Start writing Cambridge 2210 pseudocode here\n// Example: DECLARE A, B, C : INTEGER\n',
+      dirty: false
+    };
+
+    tabs.push(next);
+    activeTabId = next.id;
+    editor.setValue(next.code);
+    editor.clearHistory();
+    editorFileName.textContent = next.name;
+    output.textContent = "";
+    flowchart.innerHTML = "";
+    showOutputView();
+
+    renderTabs();
+    saveWorkspace();
+    editor.refresh();
+    updateIndentGuides();
+    editor.focus();
+  }
+
+  function closeTab(tabId) {
+    const index = tabs.findIndex(t => t.id === tabId);
+    if (index === -1) return;
+
+    if (tabs[index].dirty) {
+      if (!window.confirm(`"${tabs[index].name}" has unsaved changes. Close it?`)) {
+        return;
+      }
+    }
+
+    tabs.splice(index, 1);
+
+    if (!tabs.length) {
+      const fallback = makeWorkspace().tabs[0];
+      tabs.push(fallback);
+      activeTabId = fallback.id;
+    } else if (!tabs.some(t => t.id === activeTabId)) {
+      activeTabId = tabs[Math.max(0, Math.min(index, tabs.length - 1))].id;
+    }
+
+    switchTab(activeTabId);
+    saveWorkspace();
+  }
+
+  function renameTab() {
+    const tab = activeTab();
+    const name = window.prompt("Enter pseudocode file name:", tab.name);
+    if (name === null) return;
+
+    tab.name = fileNameSafe(name);
+    editorFileName.textContent = tab.name;
+    renderTabs();
+    saveWorkspace();
+  }
+
+  function applyOutputVisibility() {
+    const visible = outputVisibility.checked;
+    consolePanel.style.display = visible ? "" : "none";
+    mainWorkspace.style.gridTemplateColumns = visible ? "" : "minmax(0, 1fr)";
+    saveWorkspace();
+  }
+
+  /* =========================================================
+     Indentation guides
+     ========================================================= */
+
+  let indentGuideLayer = null;
+  let guideTimer = null;
+
+  function getIndentLevel(text) {
+    let spaces = 0;
+    for (const c of text) {
+      if (c === " ") spaces++;
+      else if (c === "\\t") spaces += 4;
+      else break;
+    }
+    return Math.floor(spaces / 4);
+  }
+
+  function createIndentGuideLayer() {
+    const wrapper = editor.getWrapperElement();
+    wrapper.style.position = "relative";
+
+    indentGuideLayer = document.createElement("div");
+    indentGuideLayer.className = "indent-guide-layer";
+    indentGuideLayer.setAttribute("aria-hidden", "true");
+    wrapper.appendChild(indentGuideLayer);
+
+    const ro = new ResizeObserver(function () {
+      clearTimeout(guideTimer);
+      guideTimer = setTimeout(updateIndentGuides, 30);
+    });
+    ro.observe(wrapper);
+  }
+
+  function updateIndentGuides() {
+    if (!editor || !indentGuideLayer) return;
+
+    indentGuideLayer.innerHTML = "";
+
+    const first = editor.charCoords({line: 0, ch: 0}, "local");
+    const second = editor.charCoords({line: 0, ch: 1}, "local");
+    let charWidth = second.left - first.left;
+
+    if (!Number.isFinite(charWidth) || charWidth <= 0) {
+      charWidth = editor.defaultCharWidth();
+    }
+    if (!Number.isFinite(charWidth) || charWidth <= 0) {
+      charWidth = 8.4;
+    }
+
+    let maxIndent = 0;
+    for (let i = 0; i < editor.lineCount(); i++) {
+      maxIndent = Math.max(maxIndent, getIndentLevel(editor.getLine(i)));
+    }
+
+    maxIndent = Math.min(maxIndent, 20);
+
+    for (let level = 1; level <= maxIndent; level++) {
+      const guide = document.createElement("div");
+      guide.className = "indent-guide level-" + (((level - 1) % 8) + 1);
+      guide.style.left = Math.round(first.left + level * 4 * charWidth - 1) + "px";
+      indentGuideLayer.appendChild(guide);
+    }
+  }
+
+
+  /* =========================================================
+     Automatic Flowchart Generator
+     ========================================================= */
+
+  function mermaidText(value) {
+    /*
+      Mermaid parses square brackets as part of its node syntax. To preserve
+      actual array notation in the final rendered flowchart, temporarily
+      replace [ ] with harmless Unicode placeholders and restore them after
+      Mermaid renders the SVG.
+    */
+    return String(value)
+      .replace(/\\/g, " ")
+      .replace(/"/g, "'")
+      .replace(/`/g, "'")
+      .replace(/\[/g, "⟦")
+      .replace(/\]/g, "⟧")
+      .replace(/[{}]/g, "")
+      .replace(/\|/g, "/")
+      .replace(/\r?\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function createFlowNode(nodes, type, label) {
+    const id = "N" + (nodes.length + 1);
+    nodes.push({
+      id,
+      type,
+      label: mermaidText(label)
+    });
+    return id;
+  }
+
+  function edge(edges, from, to, label) {
+    if (!from || !to) return;
+    edges.push({
+      from,
+      to,
+      label: label ? mermaidText(label) : ""
+    });
+  }
+
+  function flowShape(type, label) {
+    const safe = mermaidText(label);
+
+    if (type === "terminal") return `((${JSON.stringify(safe)}))`;
+    if (type === "decision") return `{${JSON.stringify(safe)}}`;
+    if (type === "io") return `[/ ${safe} /]`;
+    if (type === "merge") return `(( ))`;
+    return `[${JSON.stringify(safe)}]`;
+  }
+
+  function statementFlowType(line) {
+    const upper = line.trim().toUpperCase();
+
+    /*
+      Declarations define data; they are not execution steps in a flowchart.
+    */
+    if (/^(DECLARE|CONSTANT)\b/.test(upper)) return null;
+
+    if (/^(INPUT|OUTPUT)\b/.test(upper)) return "io";
+
+    if (/^(OPENFILE|READFILE|WRITEFILE|CLOSEFILE|CALL|RETURN)\b/.test(upper)) {
+      return "process";
+    }
+
+    if (/<-/.test(line)) return "process";
+
+    return null;
+  }
+
+  function simpleFlowLabel(line) {
+    /*
+      Keep Cambridge assignment notation inside process boxes.
+      Example: Total <- Total + mark[i]  →  Total ← Total + mark[i]
+    */
+    return line
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/\s*(?:<-|←)\s*/g, "  ←  ")
+      .replace(/\s+/g, " ");
+  }
+
+  function buildFlowchart(source) {
+    const cleaned = cleanSource(source);
+    let main;
+
+    try {
+      main = collectDefinitions(cleaned);
+    } catch (e) {
+      throw e;
+    }
+
+    const nodes = [];
+    const edges = [];
+
+    const startNode = createFlowNode(nodes, "terminal", "START");
+
+    function addSimple(item) {
+      const type = statementFlowType(item.text);
+      if (!type) return null;
+
+      return createFlowNode(nodes, type, simpleFlowLabel(item.text));
+    }
+
+    function parseSequence(block, start, endExclusive) {
+      let pos = start;
+      let entry = null;
+      let exits = [];
+
+      function attach(newEntry) {
+        if (!entry) entry = newEntry;
+        if (exits.length && newEntry) {
+          exits.forEach(e => edge(edges, e, newEntry));
+        }
+        exits = newEntry ? [newEntry] : exits;
+      }
+
+      while (pos < endExclusive) {
+        const raw = trimComment(block[pos].text);
+        const line = raw.trim();
+
+        if (!line) {
+          pos++;
+          continue;
+        }
+
+        const upper = line.toUpperCase();
+
+        /*
+          DECLARE and CONSTANT establish data definitions. They are not
+          executable flowchart steps, so intentionally omit them.
+        */
+        if (/^(DECLARE|CONSTANT)\b/.test(upper)) {
+          pos++;
+          continue;
+        }
+
+        /* IF / ELSE / ENDIF */
+        if (/^IF\b/.test(upper)) {
+          const structure = findIfStructure(block.map(x => x.text), pos);
+          if (structure.endIndex < 0 || structure.endIndex >= endExclusive) {
+            throw new PseudoRuntimeError("Missing ENDIF.", block[pos].lineNo);
+          }
+
+          let condition = line.replace(/^IF\s+/i, "").trim();
+          condition = condition.replace(/\s+THEN\s*$/i, "");
+
+          const decision = createFlowNode(nodes, "decision", "IF " + condition);
+
+          if (!entry) entry = decision;
+          else exits.forEach(e => edge(edges, e, decision));
+
+          const yesStart = pos + 1;
+          const yesEnd = structure.elseIndex >= 0 ? structure.elseIndex : structure.endIndex;
+          const yes = parseSequence(block, yesStart, yesEnd);
+
+          const merge = createFlowNode(nodes, "merge", "");
+
+          if (yes.entry) {
+            edge(edges, decision, yes.entry, "YES");
+            yes.exits.forEach(e => edge(edges, e, merge));
+          } else {
+            edge(edges, decision, merge, "YES");
+          }
+
+          if (structure.elseIndex >= 0) {
+            const no = parseSequence(block, structure.elseIndex + 1, structure.endIndex);
+            if (no.entry) {
+              edge(edges, decision, no.entry, "NO");
+              no.exits.forEach(e => edge(edges, e, merge));
+            } else {
+              edge(edges, decision, merge, "NO");
+            }
+          } else {
+            edge(edges, decision, merge, "NO");
+          }
+
+          exits = [merge];
+          pos = structure.endIndex + 1;
+          continue;
+        }
+
+        /* FOR / NEXT */
+        if (/^FOR\b/.test(upper)) {
+          const end = findForStructure(block.map(x => x.text), pos);
+          if (end < 0 || end >= endExclusive) {
+            throw new PseudoRuntimeError("Missing NEXT.", block[pos].lineNo);
+          }
+
+          const spec = parseFor(line, null, block[pos].lineNo);
+          const init = createFlowNode(
+            nodes,
+            "process",
+            simpleFlowLabel(`${spec.identifier} <- ${spec.start}`)
+          );
+          const decision = createFlowNode(
+            nodes,
+            "decision",
+            `${spec.identifier} ≤ ${spec.end}?`
+          );
+          const increment = createFlowNode(
+            nodes,
+            "process",
+            simpleFlowLabel(`${spec.identifier} <- ${spec.identifier} + ${spec.step}`)
+          );
+          const merge = createFlowNode(nodes, "merge", "");
+
+          if (!entry) entry = init;
+          else exits.forEach(e => edge(edges, e, init));
+
+          edge(edges, init, decision);
+
+          const body = parseSequence(block, pos + 1, end);
+          if (body.entry) {
+            edge(edges, decision, body.entry, "YES");
+            body.exits.forEach(e => edge(edges, e, increment));
+          } else {
+            edge(edges, decision, increment, "YES");
+          }
+
+          edge(edges, increment, decision);
+          edge(edges, decision, merge, "NO");
+
+          exits = [merge];
+          pos = end + 1;
+          continue;
+        }
+
+        /* WHILE / ENDWHILE */
+        if (/^WHILE\b/.test(upper)) {
+          const end = findWhileStructure(block.map(x => x.text), pos);
+          if (end < 0 || end >= endExclusive) {
+            throw new PseudoRuntimeError("Missing ENDWHILE.", block[pos].lineNo);
+          }
+
+          let condition = line.replace(/^WHILE\s+/i, "").trim();
+          condition = condition.replace(/\s+DO\s*$/i, "");
+
+          const decision = createFlowNode(nodes, "decision", `WHILE ${condition}?`);
+          const merge = createFlowNode(nodes, "merge", "");
+
+          if (!entry) entry = decision;
+          else exits.forEach(e => edge(edges, e, decision));
+
+          const body = parseSequence(block, pos + 1, end);
+          if (body.entry) {
+            edge(edges, decision, body.entry, "YES");
+            body.exits.forEach(e => edge(edges, e, decision));
+          } else {
+            edge(edges, decision, decision, "YES");
+          }
+
+          edge(edges, decision, merge, "NO");
+          exits = [merge];
+          pos = end + 1;
+          continue;
+        }
+
+        /* REPEAT / UNTIL */
+        if (/^REPEAT$/.test(upper)) {
+          const end = findRepeatStructure(block.map(x => x.text), pos);
+          if (end < 0 || end >= endExclusive) {
+            throw new PseudoRuntimeError("Missing UNTIL.", block[pos].lineNo);
+          }
+
+          const body = parseSequence(block, pos + 1, end);
+          const bodyEntry = body.entry || createFlowNode(nodes, "process", "REPEAT BODY");
+          let condition = trimComment(block[end].text).trim().replace(/^UNTIL\s+/i, "");
+          const decision = createFlowNode(nodes, "decision", `UNTIL ${condition}?`);
+          const merge = createFlowNode(nodes, "merge", "");
+
+          if (!entry) entry = bodyEntry;
+          else exits.forEach(e => edge(edges, e, bodyEntry));
+
+          body.exits.forEach(e => edge(edges, e, decision));
+          edge(edges, decision, merge, "YES");
+          edge(edges, decision, bodyEntry, "NO");
+
+          exits = [merge];
+          pos = end + 1;
+          continue;
+        }
+
+        /* CASE OF */
+        if (/^CASE\s+OF\b/.test(upper)) {
+          const end = findCaseStructure(block.map(x => x.text), pos);
+          if (end < 0 || end >= endExclusive) {
+            throw new PseudoRuntimeError("Missing ENDCASE.", block[pos].lineNo);
+          }
+
+          const selector = line.replace(/^CASE\s+OF\s+/i, "").trim();
+          const decision = createFlowNode(nodes, "decision", `CASE ${selector}`);
+          const merge = createFlowNode(nodes, "merge", "");
+
+          if (!entry) entry = decision;
+          else exits.forEach(e => edge(edges, e, decision));
+
+          for (let i = pos + 1; i < end; i++) {
+            const clause = trimComment(block[i].text).trim();
+            if (!clause) continue;
+
+            let cm = clause.match(/^OTHERWISE\s+(.*)$/i);
+            if (cm) {
+              const action = createFlowNode(nodes, statementFlowType(cm[1]) || "process", simpleFlowLabel(cm[1]));
+              edge(edges, decision, action, "OTHERWISE");
+              edge(edges, action, merge);
+              continue;
+            }
+
+            cm = clause.match(/^(.*?)\s*:\s*(.*)$/);
+            if (cm) {
+              const action = createFlowNode(nodes, statementFlowType(cm[2]) || "process", simpleFlowLabel(cm[2]));
+              edge(edges, decision, action, cm[1].trim());
+              edge(edges, action, merge);
+            }
+          }
+
+          exits = [merge];
+          pos = end + 1;
+          continue;
+        }
+
+        /* Closing markers are consumed by their parent structures. */
+        if (/^(ELSE|ENDIF|ENDCASE|NEXT|UNTIL|ENDWHILE)\b/.test(upper)) {
+          pos++;
+          continue;
+        }
+
+        const node = addSimple(block[pos]);
+        if (node) {
+          if (!entry) entry = node;
+          else exits.forEach(e => edge(edges, e, node));
+          exits = [node];
+        }
+
+        pos++;
+      }
+
+      return { entry, exits };
+    }
+
+    const parsed = parseSequence(main, 0, main.length);
+    const endNode = createFlowNode(nodes, "terminal", "END");
+
+    if (parsed.entry) {
+      edge(edges, startNode, parsed.entry);
+      parsed.exits.forEach(e => edge(edges, e, endNode));
+    } else {
+      edge(edges, startNode, endNode);
+    }
+
+    let graph = "flowchart TD\n";
+    graph += "  %% Generated automatically from Cambridge 2210 pseudocode\n";
+
+    nodes.forEach(n => {
+      graph += `  ${n.id}${flowShape(n.type, n.label)}\n`;
+    });
+
+    edges.forEach(e => {
+      graph += `  ${e.from} -->${e.label ? `|${e.label}|` : ""} ${e.to}\n`;
+    });
+
+    graph += `
+  classDef terminal fill:#123b27,stroke:#27ae60,stroke-width:2px,color:#ffffff;
+  classDef process fill:#182029,stroke:#607080,stroke-width:1.5px,color:#eef3f6;
+  classDef io fill:#102d2a,stroke:#52d6c7,stroke-width:1.5px,color:#eef3f6;
+  classDef decision fill:#352a10,stroke:#f4c44e,stroke-width:1.7px,color:#ffffff;
+  classDef merge fill:#26303a,stroke:#657280,stroke-width:1px,color:#26303a;
+  class N1,${endNode} terminal;
+`;
+
+    nodes.forEach(n => {
+      if (n.type === "process") graph += `  class ${n.id} process;\n`;
+      else if (n.type === "io") graph += `  class ${n.id} io;\n`;
+      else if (n.type === "decision") graph += `  class ${n.id} decision;\n`;
+      else if (n.type === "merge") graph += `  class ${n.id} merge;\n`;
+    });
+
+    return graph;
+  }
+
+  async function generateFlowchart(source) {
+    if (typeof mermaid === "undefined") {
+      throw new Error("Flowchart engine could not be loaded. Please check your internet connection.");
+    }
+
+    const graph = buildFlowchart(source);
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "dark",
+      flowchart: {
+        htmlLabels: true,
+        curve: "basis",
+        useMaxWidth: false,
+        nodeSpacing: 55,
+        rankSpacing: 65
+      },
+      themeVariables: {
+        background: "#090c10",
+        primaryTextColor: "#eef3f6",
+        lineColor: "#74808c",
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        fontSize: "13px"
+      }
+    });
+
+    const renderId = "flowchart-" + Date.now();
+    const result = await mermaid.render(renderId, graph);
+
+    /*
+      Mermaid has finished parsing. Restore literal pseudocode array brackets
+      in the rendered SVG/HTML labels.
+    */
+    flowchart.innerHTML = result.svg
+      .replace(/⟦/g, "[")
+      .replace(/⟧/g, "]");
+
+    const svgElement = flowchart.querySelector("svg");
+    if (svgElement && !svgElement.getAttribute("viewBox")) {
+      const w = parseFloat(svgElement.getAttribute("width")) || 1200;
+      const h = parseFloat(svgElement.getAttribute("height")) || 800;
+      svgElement.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    }
+
+    if (result.bindFunctions) {
+      result.bindFunctions(flowchart);
+    }
+  }
+
+  function currentFlowchartSvg() {
+    const svg = flowchart.querySelector("svg");
+    if (!svg) throw new Error("Generate a flowchart first.");
+    return svg.cloneNode(true);
+  }
+
+  function downloadFlowchartSvg() {
+    const svg = currentFlowchartSvg();
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+    const text = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([text], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileNameSafe(activeTab().name).replace(/\.(pseudo|txt)$/i, "") + "_flowchart.svg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function downloadFlowchartPdf() {
+    const svg = currentFlowchartSvg();
+    const Jspdf = window.jspdf && window.jspdf.jsPDF;
+    if (!Jspdf) {
+      throw new Error("PDF engine could not be loaded. Check your internet connection and reload the page.");
+    }
+
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+    let width = parseFloat(svg.getAttribute("width"));
+    let height = parseFloat(svg.getAttribute("height"));
+    const viewBox = svg.getAttribute("viewBox");
+
+    if ((!width || !height) && viewBox) {
+      const parts = viewBox.trim().split(/[ ,]+/).map(Number);
+      width = parts[2];
+      height = parts[3];
+    }
+
+    width = Number.isFinite(width) && width > 0 ? width : 1200;
+    height = Number.isFinite(height) && height > 0 ? height : 800;
+
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(800, Math.ceil(width * scale));
+    canvas.height = Math.max(600, Math.ceil(height * scale));
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#090c10";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const svgText = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not convert the flowchart to PDF image."));
+      };
+      img.src = url;
+    });
+
+    const ratio = width / height;
+    const orientation = ratio >= 1.15 ? "landscape" : "portrait";
+    const pdf = new Jspdf({ orientation, unit: "mm", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const title = activeTab().name.replace(/\.(pseudo|txt)$/i, "") + " — Flowchart";
+
+    pdf.setTextColor(235, 240, 244);
+    pdf.setFontSize(12);
+    pdf.text(title, margin, margin + 3);
+
+    const maxW = pageW - margin * 2;
+    const maxH = pageH - margin * 2 - 8;
+    const imageRatio = canvas.width / canvas.height;
+    let drawW = maxW;
+    let drawH = drawW / imageRatio;
+
+    if (drawH > maxH) {
+      drawH = maxH;
+      drawW = drawH * imageRatio;
+    }
+
+    const x = (pageW - drawW) / 2;
+    const y = margin + 7;
+
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, y, drawW, drawH, undefined, "FAST");
+    pdf.save(fileNameSafe(activeTab().name).replace(/\.(pseudo|txt)$/i, "") + "_flowchart.pdf");
+  }
+
+  function showOutputView() {
+    output.style.display = "";
+    flowchartWrap.hidden = true;
+
+    outputViewBtn.classList.add("active");
+    flowchartViewBtn.classList.remove("active");
+
+    viewerTitle.textContent = "Compiler Output";
+    viewerSubtitle.textContent = "Output, INPUT prompts, and syntax errors";
+  }
+
+  function showFlowchartView() {
+    output.style.display = "none";
+    flowchartWrap.hidden = false;
+
+    outputViewBtn.classList.remove("active");
+    flowchartViewBtn.classList.add("active");
+
+    viewerTitle.textContent = "Flowchart";
+    viewerSubtitle.textContent = "Automatically generated from the executable pseudocode";
+  }
+
+  /* =========================================================
+     Compiler / Interpreter
+     ========================================================= */
+
+  class PseudoRuntimeError extends Error {
+    constructor(message, lineNo) {
+      super(message);
+      this.name = "PseudoRuntimeError";
+      this.lineNo = lineNo || 0;
+    }
+  }
+
+  class Env {
+    constructor(parent = null) {
+      this.parent = parent;
+      this.values = Object.create(null);
+      this.types = Object.create(null);
+      this.constants = Object.create(null);
+    }
+
+    key(name) {
+      return String(name).toLowerCase();
+    }
+
+    hasLocal(name) {
+      return Object.prototype.hasOwnProperty.call(this.values, this.key(name));
+    }
+
+    has(name) {
+      const k = this.key(name);
+      return this.hasLocal(name) || (this.parent && this.parent.has(name));
+    }
+
+    get(name) {
+      const k = this.key(name);
+      if (Object.prototype.hasOwnProperty.call(this.values, k)) {
+        return this.values[k];
+      }
+      if (this.parent) return this.parent.get(name);
+      throw new Error("Unknown identifier: " + name);
+    }
+
+    set(name, value, lineNo, allowExistingParent = true) {
+      const k = this.key(name);
+
+      if (Object.prototype.hasOwnProperty.call(this.constants, k)) {
+        throw new PseudoRuntimeError(`Cannot assign to CONSTANT "${name}".`, lineNo);
+      }
+
+      if (Object.prototype.hasOwnProperty.call(this.values, k)) {
+        this.values[k] = value;
+        return;
+      }
+
+      if (allowExistingParent && this.parent && this.parent.has(name)) {
+        this.parent.set(name, value, lineNo, true);
+        return;
+      }
+
+      throw new PseudoRuntimeError(`Unknown identifier: ${name}`, lineNo);
+    }
+
+    declare(name, type, lineNo) {
+      const k = this.key(name);
+      if (this.hasLocal(name)) {
+        throw new PseudoRuntimeError(`Identifier "${name}" already declared.`, lineNo);
+      }
+      this.types[k] = type.toUpperCase();
+      this.values[k] = defaultValue(type);
+    }
+
+    constant(name, value, lineNo) {
+      const k = this.key(name);
+      if (this.hasLocal(name)) {
+        throw new PseudoRuntimeError(`Identifier "${name}" already declared.`, lineNo);
+      }
+      this.constants[k] = true;
+      this.values[k] = value;
+    }
+  }
+
+  function defaultValue(type) {
+    switch (String(type).toUpperCase()) {
+      case "INTEGER": return 0;
+      case "REAL": return 0.0;
+      case "CHAR": return "";
+      case "STRING": return "";
+      case "BOOLEAN": return false;
+      default: return null;
+    }
+  }
+
+  class PArray {
+    constructor(bounds, type) {
+      this.bounds = bounds;
+      this.type = type.toUpperCase();
+      this.data = Object.create(null);
+    }
+
+    normalizeIndex(index, dim) {
+      const b = this.bounds[dim];
+      const n = Number(index);
+      if (!Number.isInteger(n) || n < b[0] || n > b[1]) {
+        throw new Error(`Array index ${index} is outside [${b[0]}:${b[1]}].`);
+      }
+      return n;
+    }
+
+    key(indices) {
+      return indices.map((x, i) => this.normalizeIndex(x, i)).join(",");
+    }
+
+    get(indices) {
+      const k = this.key(indices);
+      if (!Object.prototype.hasOwnProperty.call(this.data, k)) {
+        return defaultValue(this.type);
+      }
+      return this.data[k];
+    }
+
+    set(indices, value) {
+      this.data[this.key(indices)] = value;
+    }
+  }
+
+  const procedures = Object.create(null);
+  const functions = Object.create(null);
+  const virtualFiles = Object.create(null);
+
+  function normalizeText(text) {
+    return String(text)
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/−/g, "-")
+      .replace(/–/g, "-")
+      .replace(/←/g, "<-")
+      .replace(/\u0000/g, "");
+  }
+
+  function stripLineNumber(line) {
+    return line.replace(/^\s*\d+\s+/, "");
+  }
+
+  function cleanSource(text) {
+    return normalizeText(text)
+      .split(/\r?\n/)
+      .map(stripLineNumber);
+  }
+
+  function isComment(line) {
+    return /^\s*\/\//.test(line) || /^\s*$/.test(line);
+  }
+
+  function trimComment(line) {
+    let quote = null;
+    for (let i = 0; i < line.length - 1; i++) {
+      const c = line[i];
+      if ((c === "'" || c === '"') && line[i - 1] !== "\\") {
+        if (quote === null) quote = c;
+        else if (quote === c) quote = null;
+      }
+      if (!quote && line[i] === "/" && line[i + 1] === "/") {
+        return line.slice(0, i).trimEnd();
+      }
+    }
+    return line;
+  }
+
+  function splitTopLevel(text, delimiter = ",") {
+    const parts = [];
+    let start = 0;
+    let depth = 0;
+    let quote = null;
+
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+
+      if ((c === "'" || c === '"') && text[i - 1] !== "\\") {
+        if (!quote) quote = c;
+        else if (quote === c) quote = null;
+        continue;
+      }
+
+      if (quote) continue;
+
+      if (c === "(" || c === "[") depth++;
+      else if (c === ")" || c === "]") depth--;
+      else if (c === delimiter && depth === 0) {
+        parts.push(text.slice(start, i).trim());
+        start = i + 1;
+      }
+    }
+
+    const tail = text.slice(start).trim();
+    if (tail) parts.push(tail);
+    return parts;
+  }
+
+  function findTopLevelAssignment(text) {
+    let depth = 0;
+    let quote = null;
+
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+
+      if ((c === "'" || c === '"') && text[i - 1] !== "\\") {
+        if (!quote) quote = c;
+        else if (quote === c) quote = null;
+        continue;
+      }
+
+      if (quote) continue;
+
+      if (c === "(" || c === "[") depth++;
+      else if (c === ")" || c === "]") depth--;
+      else if (depth === 0 && text.startsWith("<-", i)) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  function parseLiteral(text) {
+    const t = text.trim();
+
+    if (/^".*"$/.test(t) || /^'.*'$/.test(t)) {
+      try {
+        return JSON.parse(t.startsWith('"') ? t : '"' + t.slice(1, -1).replace(/"/g, '\\"') + '"');
+      } catch {
+        return t.slice(1, -1);
+      }
+    }
+
+    if (/^TRUE$/i.test(t)) return true;
+    if (/^FALSE$/i.test(t)) return false;
+
+    if (/^-?\d+$/.test(t)) return Number(t);
+    if (/^-?\d+\.\d+$/.test(t)) return Number(t);
+
+    return undefined;
+  }
+
+  function replaceFunctionCalls(expr) {
+    let out = expr;
+
+    out = out.replace(/\bLENGTH\s*\(([^()]*)\)/gi,
+      (_, a) => `FN_LENGTH(${a})`);
+
+    out = out.replace(/\bLCASE\s*\(([^()]*)\)/gi,
+      (_, a) => `FN_LCASE(${a})`);
+
+    out = out.replace(/\bUCASE\s*\(([^()]*)\)/gi,
+      (_, a) => `FN_UCASE(${a})`);
+
+    out = out.replace(/\bSUBSTRING\s*\(([^()]*),\s*([^,()]+),\s*([^()]+)\)/gi,
+      (_, a, b, c) => `FN_SUBSTRING(${a},${b},${c})`);
+
+    out = out.replace(/\bROUND\s*\(([^()]*),\s*([^()]+)\)/gi,
+      (_, a, b) => `FN_ROUND(${a},${b})`);
+
+    out = out.replace(/\bRANDOM\s*\(\s*\)/gi, "FN_RANDOM()");
+
+    out = out.replace(/\bDIV\s*\(([^()]*),\s*([^()]+)\)/gi,
+      (_, a, b) => `FN_DIV(${a},${b})`);
+
+    out = out.replace(/\bMOD\s*\(([^()]*),\s*([^()]+)\)/gi,
+      (_, a, b) => `FN_MOD(${a},${b})`);
+
+    return out;
+  }
+
+  function replaceArrayAccess(expr) {
+    let out = expr;
+
+    /* 2D first */
+    out = out.replace(
+      /\b([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^,\[\]]+)\s*,\s*([^\[\]]+)\s*\]/g,
+      (_, name, a, b) => `FN_GETARRAY("${name}",[${a},${b}])`
+    );
+
+    /* 1D */
+    out = out.replace(
+      /\b([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^\[\]]+)\s*\]/g,
+      (_, name, a) => `FN_GETARRAY("${name}",[${a}])`
+    );
+
+    return out;
+  }
+
+  function convertExpression(expr) {
+    let out = String(expr).trim();
+
+    /*
+      Cambridge 2210 equality uses "=".
+      JavaScript needs "===" for a comparison. Only convert a single "=";
+      leave >=, <=, != and existing == untouched.
+    */
+    out = out.replace(/<>/g, "!=");
+    out = out.replace(/(?<![<>=!])=(?!=)/g, "===");
+    out = out.replace(/\^/g, "**");
+
+    out = out.replace(/\bAND\b/gi, "&&");
+    out = out.replace(/\bOR\b/gi, "||");
+    out = out.replace(/\bNOT\b/gi, "!");
+
+    out = out.replace(/\bTRUE\b/gi, "true");
+    out = out.replace(/\bFALSE\b/gi, "false");
+
+    out = replaceFunctionCalls(out);
+    out = replaceArrayAccess(out);
+
+    /* Identifiers are resolved through env proxy. */
+    return out;
+  }
+
+  function makeProxy(env, arrayAccessor) {
+    const local = {
+      FN_LENGTH: x => String(x).length,
+      FN_LCASE: x => String(x).toLowerCase(),
+      FN_UCASE: x => String(x).toUpperCase(),
+      FN_SUBSTRING: (x, start, length) => {
+        const s = String(x);
+        return s.substring(Number(start) - 1, Number(start) - 1 + Number(length));
+      },
+      FN_ROUND: (x, places) => {
+        const p = Number(places);
+        const factor = 10 ** p;
+        return Math.round(Number(x) * factor) / factor;
+      },
+      FN_RANDOM: () => Math.random(),
+      FN_DIV: (a,b) => {
+        if (Number(b) === 0) throw new Error("DIV by zero.");
+        return Math.trunc(Number(a) / Number(b));
+      },
+      FN_MOD: (a,b) => {
+        if (Number(b) === 0) throw new Error("MOD by zero.");
+        return Number(a) % Number(b);
+      },
+      FN_GETARRAY: (name, indices) => arrayAccessor(name, indices)
+    };
+
+    return new Proxy(local, {
+      has(target, prop) {
+        return true;
+      },
+      get(target, prop) {
+        if (prop in target) return target[prop];
+        if (typeof prop === "symbol") return undefined;
+        return env.get(String(prop));
+      },
+      set(target, prop, value) {
+        env.set(String(prop), value, 0, true);
+        return true;
+      }
+    });
+  }
+
+  function validateExpressionIdentifiers(expr, env, lineNo) {
+    /* Remove quoted strings before scanning identifiers so words inside
+       messages are never treated as variable names. */
+    const withoutStrings = String(expr).replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, " ");
+    const words = withoutStrings.match(/\b[A-Za-z][A-Za-z0-9]*\b/g) || [];
+
+    const ignored = new Set([
+      "AND", "OR", "NOT", "TRUE", "FALSE", "DIV", "MOD",
+      "LENGTH", "LCASE", "UCASE", "SUBSTRING", "ROUND", "RANDOM"
+    ]);
+
+    for (const word of words) {
+      const upper = word.toUpperCase();
+      if (ignored.has(upper)) continue;
+      if (functions[upper.toLowerCase()]) continue;
+      if (!env.has(word)) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${word}`, lineNo);
+      }
+    }
+  }
+
+  function evalExpr(expr, env, lineNo) {
+    const literal = parseLiteral(expr);
+    if (literal !== undefined) return literal;
+
+    validateExpressionIdentifiers(expr, env, lineNo);
+
+    const converted = convertExpression(expr);
+
+    try {
+      const proxy = makeProxy(env, (name, indices) => {
+        const arr = env.get(name);
+        if (!(arr instanceof PArray)) {
+          throw new Error(`"${name}" is not an array.`);
+        }
+        return arr.get(indices);
+      });
+
+      return Function("env", `with(env){ return (${converted}); }`)(proxy);
+    } catch (e) {
+      if (e instanceof PseudoRuntimeError) throw e;
+      throw new PseudoRuntimeError(`Cannot evaluate expression "${expr}": ${e.message}`, lineNo);
+    }
+  }
+
+  function declaredType(env, name) {
+    const key = env.key(name);
+
+    if (Object.prototype.hasOwnProperty.call(env.types, key)) {
+      return env.types[key];
+    }
+
+    if (env.parent && Object.prototype.hasOwnProperty.call(env.parent.types, key)) {
+      return env.parent.types[key];
+    }
+
+    return null;
+  }
+
+  function coerceValueForType(value, expectedType, target, lineNo) {
+    const type = String(expectedType || "").toUpperCase();
+
+    if (!type || type === "ARRAY") return value;
+
+    if (type === "INTEGER" && (typeof value !== "number" || !Number.isInteger(value))) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects INTEGER.`, lineNo);
+    }
+
+    if (type === "REAL" && (typeof value !== "number" || Number.isNaN(value))) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects REAL.`, lineNo);
+    }
+
+    if (type === "BOOLEAN" && typeof value !== "boolean") {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects BOOLEAN.`, lineNo);
+    }
+
+    if (type === "CHAR" && (typeof value !== "string" || [...value].length !== 1)) {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects CHAR.`, lineNo);
+    }
+
+    if (type === "STRING" && typeof value !== "string") {
+      throw new PseudoRuntimeError(`Type error: "${target}" expects STRING.`, lineNo);
+    }
+
+    return value;
+  }
+
+  function setTarget(target, value, env, lineNo) {
+    const t = target.trim();
+
+    let m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^,\[\]]+)\s*,\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not a 2D array.`, lineNo);
+      }
+
+      const i = evalExpr(m[2], env, lineNo);
+      const j = evalExpr(m[3], env, lineNo);
+      const typed = coerceValueForType(value, arr.type, target, lineNo);
+      arr.set([i, j], typed);
+      return;
+    }
+
+    m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
+      }
+
+      const i = evalExpr(m[2], env, lineNo);
+      const typed = coerceValueForType(value, arr.type, target, lineNo);
+      arr.set([i], typed);
+      return;
+    }
+
+    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(t)) {
+      throw new PseudoRuntimeError(`Invalid assignment target "${target}".`, lineNo);
+    }
+
+    if (!env.has(t)) {
+      throw new PseudoRuntimeError(`Unknown identifier: ${t}`, lineNo);
+    }
+
+    const typed = coerceValueForType(value, declaredType(env, t), target, lineNo);
+    env.set(t, typed, lineNo, true);
+  }
+
+  function declareArray(rest, env, lineNo) {
+    const m1 = rest.match(/^([A-Za-z][A-Za-z0-9]*)\s*:\s*ARRAY\s*\[\s*(-?\d+)\s*:\s*(-?\d+)\s*\]\s+OF\s+(INTEGER|REAL|CHAR|STRING|BOOLEAN)$/i);
+    if (m1) {
+      env.values[env.key(m1[1])] = new PArray(
+        [[Number(m1[2]), Number(m1[3])]],
+        m1[4]
+      );
+      env.types[env.key(m1[1])] = "ARRAY";
+      return;
+    }
+
+    const m2 = rest.match(/^([A-Za-z][A-Za-z0-9]*)\s*:\s*ARRAY\s*\[\s*(-?\d+)\s*:\s*(-?\d+)\s*,\s*(-?\d+)\s*:\s*(-?\d+)\s*\]\s+OF\s+(INTEGER|REAL|CHAR|STRING|BOOLEAN)$/i);
+    if (m2) {
+      env.values[env.key(m2[1])] = new PArray(
+        [
+          [Number(m2[2]), Number(m2[3])],
+          [Number(m2[4]), Number(m2[5])]
+        ],
+        m2[6]
+      );
+      env.types[env.key(m2[1])] = "ARRAY";
+      return;
+    }
+
+    throw new PseudoRuntimeError(`Invalid ARRAY declaration: ${rest}`, lineNo);
+  }
+
+  function parseDeclaration(line, env, lineNo) {
+    const rest = line.replace(/^DECLARE\s+/i, "").trim();
+
+    if (/\bARRAY\s*\[/i.test(rest)) {
+      declareArray(rest, env, lineNo);
+      return;
+    }
+
+    /*
+      Cambridge-style declarations can declare several identifiers of the
+      same type on one line, for example:
+        DECLARE Name, Name2 : STRING
+        DECLARE A, B, C : INTEGER
+    */
+    const m = rest.match(
+      /^([A-Za-z][A-Za-z0-9]*(?:\s*,\s*[A-Za-z][A-Za-z0-9]*)*)\s*:\s*(INTEGER|REAL|CHAR|STRING|BOOLEAN)$/i
+    );
+
+    if (!m) {
+      throw new PseudoRuntimeError(`Invalid DECLARE statement: ${line}`, lineNo);
+    }
+
+    const names = m[1]
+      .split(",")
+      .map(name => name.trim())
+      .filter(Boolean);
+
+    const type = m[2].toUpperCase();
+
+    for (const name of names) {
+      env.declare(name, type, lineNo);
+    }
+  }
+
+  function parseConstant(line, env, lineNo) {
+    const body = line.replace(/^CONSTANT\s+/i, "").trim();
+    const p = findTopLevelAssignment(body);
+
+    if (p < 0) {
+      throw new PseudoRuntimeError(`CONSTANT requires "<-": ${line}`, lineNo);
+    }
+
+    const name = body.slice(0, p).trim();
+    const expr = body.slice(p + 2).trim();
+    const value = parseLiteral(expr);
+
+    if (value === undefined) {
+      throw new PseudoRuntimeError("CONSTANT values must be literals.", lineNo);
+    }
+
+    env.constant(name, value, lineNo);
+  }
+
+  async function outputLine(line, env, lineNo) {
+    const body = line.replace(/^OUTPUT\s+/i, "");
+    const parts = splitTopLevel(body, ",");
+    const values = [];
+
+    for (const part of parts) {
+      values.push(await evalExpressionAsync(part, env, lineNo));
+    }
+
+    writeOutput(values.map(v => v === null || v === undefined ? "" : String(v)).join(""));
+  }
+
+  function getTargetType(target, env, lineNo) {
+    const t = target.trim();
+    let m = t.match(/^([A-Za-z][A-Za-z0-9]*)$/);
+
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const key = env.key(m[1]);
+      if (Object.prototype.hasOwnProperty.call(env.types, key)) {
+        return env.types[key];
+      }
+      if (env.parent && Object.prototype.hasOwnProperty.call(env.parent.types, key)) {
+        return env.parent.types[key];
+      }
+      return null;
+    }
+
+    m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
+      }
+      const index = evalExpr(m[2], env, lineNo);
+      arr.normalizeIndex(index, 0);
+      return arr.type;
+    }
+
+    m = t.match(/^([A-Za-z][A-Za-z0-9]*)\s*\[\s*([^,\[\]]+)\s*,\s*([^\[\]]+)\s*\]$/);
+    if (m) {
+      if (!env.has(m[1])) {
+        throw new PseudoRuntimeError(`Unknown identifier: ${m[1]}`, lineNo);
+      }
+      const arr = env.get(m[1]);
+      if (!(arr instanceof PArray)) {
+        throw new PseudoRuntimeError(`"${m[1]}" is not an array.`, lineNo);
+      }
+      arr.normalizeIndex(evalExpr(m[2], env, lineNo), 0);
+      arr.normalizeIndex(evalExpr(m[3], env, lineNo), 1);
+      return arr.type;
+    }
+
+    throw new PseudoRuntimeError(`Invalid INPUT target "${target}".`, lineNo);
+  }
+
+  function convertInputValue(valueText, type, target, lineNo) {
+    const raw = valueText.trim();
+
+    switch (String(type || "STRING").toUpperCase()) {
+      case "INTEGER":
+        if (raw === "" || !/^[-+]?\d+$/.test(raw)) {
+          throw new PseudoRuntimeError(`Expected INTEGER for "${target}".`, lineNo);
+        }
+        return Number(raw);
+
+      case "REAL":
+        if (raw === "" || Number.isNaN(Number(raw))) {
+          throw new PseudoRuntimeError(`Expected REAL for "${target}".`, lineNo);
+        }
+        return Number(raw);
+
+      case "BOOLEAN":
+        if (/^TRUE$/i.test(raw)) return true;
+        if (/^FALSE$/i.test(raw)) return false;
+        throw new PseudoRuntimeError(`Expected TRUE or FALSE for "${target}".`, lineNo);
+
+      case "CHAR":
+        if ([...valueText].length !== 1) {
+          throw new PseudoRuntimeError(`Expected one character for "${target}".`, lineNo);
+        }
+        return valueText;
+
+      case "STRING":
+      default:
+        return valueText;
+    }
+  }
+
+  async function inputInto(target, env, lineNo) {
+    /*
+      INPUT respects the declared type of scalar variables and ARRAY elements.
+      This prevents numeric ARRAY INPUT values from becoming strings.
+    */
+    const type = getTargetType(target, env, lineNo);
+    const valueText = await requestInput("");
+    const value = convertInputValue(valueText, type, target, lineNo);
+    setTarget(target, value, env, lineNo);
+  }
+
+  async function requestInput(prompt) {
+    return new Promise(resolve => {
+      const wrapper = document.createElement("div");
+      if (prompt) wrapper.appendChild(document.createTextNode(prompt));
+
+      const input = document.createElement("input");
+      input.className = "console-input";
+      input.type = "text";
+      input.autocomplete = "off";
+      input.spellcheck = false;
+
+      wrapper.appendChild(input);
+      output.appendChild(wrapper);
+      output.scrollTop = output.scrollHeight;
+      input.focus();
+
+      function finish() {
+        const v = input.value;
+        const echo = document.createElement("div");
+        echo.textContent = v;
+        wrapper.appendChild(echo);
+        input.remove();
+        resolve(v);
+      }
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish();
+        }
+      });
+    });
+  }
+
+  function writeOutput(text) {
+    output.appendChild(document.createTextNode(text + "\n"));
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function findMatching(lines, startIndex, openWords, closeWord) {
+    let depth = 0;
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim().toUpperCase();
+      if (!line) continue;
+
+      for (const w of openWords) {
+        if (new RegExp("^" + w + "\\b").test(line)) depth++;
+      }
+
+      if (new RegExp("^" + closeWord + "\\b").test(line)) {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+
+    return -1;
+  }
+
+  function findIfStructure(lines, startIndex) {
+    let depth = 0;
+    let elseIndex = -1;
+    let endIndex = -1;
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim().toUpperCase();
+      if (!line) continue;
+
+      if (/^IF\b/.test(line)) depth++;
+      if (/^ENDIF\b/.test(line)) {
+        depth--;
+        if (depth === 0) {
+          endIndex = i;
+          break;
+        }
+      } else if (depth === 1 && /^ELSE\b/.test(line)) {
+        elseIndex = i;
+      }
+    }
+
+    return { elseIndex, endIndex };
+  }
+
+  function findCaseStructure(lines, startIndex) {
+    let depth = 0;
+    let end = -1;
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim().toUpperCase();
+      if (/^CASE\b/.test(line)) depth++;
+      if (/^ENDCASE\b/.test(line)) {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+
+    return end;
+  }
+
+  function findForStructure(lines, startIndex) {
+    let depth = 0;
+    let end = -1;
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim().toUpperCase();
+      if (/^FOR\b/.test(line)) depth++;
+      if (/^NEXT\b/.test(line)) {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+
+    return end;
+  }
+
+  function findWhileStructure(lines, startIndex) {
+    let depth = 0;
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim().toUpperCase();
+      if (/^WHILE\b/.test(line)) depth++;
+      if (/^ENDWHILE\b/.test(line)) {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return -1;
+  }
+
+  function findRepeatStructure(lines, startIndex) {
+    for (let i = startIndex + 1; i < lines.length; i++) {
+      const line = trimComment(lines[i]).trim();
+      if (/^UNTIL\b/i.test(line)) return i;
+    }
+    return -1;
+  }
+
+  function parseProcSignature(line, kind) {
+    const re = kind === "PROCEDURE"
+      ? /^PROCEDURE\s+([A-Za-z][A-Za-z0-9]*)(?:\s*\((.*?)\))?$/i
+      : /^FUNCTION\s+([A-Za-z][A-Za-z0-9]*)(?:\s*\((.*?)\))?\s+RETURNS\s+(INTEGER|REAL|CHAR|STRING|BOOLEAN)$/i;
+
+    const m = line.match(re);
+    if (!m) return null;
+
+    let params = [];
+    if (m[2]) {
+      params = splitTopLevel(m[2], ",").map(p => {
+        const pm = p.match(/^([A-Za-z][A-Za-z0-9]*)\s*:\s*(INTEGER|REAL|CHAR|STRING|BOOLEAN)$/i);
+        if (!pm) throw new Error("Invalid parameter declaration: " + p);
+        return { name: pm[1], type: pm[2].toUpperCase() };
+      });
+    }
+
+    return {
+      name: m[1],
+      params,
+      returns: kind === "FUNCTION" ? m[3].toUpperCase() : null
+    };
+  }
+
+  function collectDefinitions(lines) {
+    Object.keys(procedures).forEach(k => delete procedures[k]);
+    Object.keys(functions).forEach(k => delete functions[k]);
+
+    const main = [];
+    for (let i = 0; i < lines.length; i++) {
+      const clean = trimComment(lines[i]).trim();
+      if (!clean) {
+        main.push(lines[i]);
+        continue;
+      }
+
+      let kind = null;
+      if (/^PROCEDURE\b/i.test(clean)) kind = "PROCEDURE";
+      else if (/^FUNCTION\b/i.test(clean)) kind = "FUNCTION";
+
+      if (!kind) {
+        main.push(lines[i]);
+        continue;
+      }
+
+      const sig = parseProcSignature(clean, kind);
+      if (!sig) {
+        throw new PseudoRuntimeError(`Invalid ${kind} definition.`, i + 1);
+      }
+
+      const endWord = kind === "PROCEDURE" ? "ENDPROCEDURE" : "ENDFUNCTION";
+      let j = i + 1;
+      const body = [];
+
+      for (; j < lines.length; j++) {
+        const l = trimComment(lines[j]).trim();
+        if (new RegExp("^" + endWord + "\\b", "i").test(l)) break;
+        body.push({ text: lines[j], lineNo: j + 1 });
+      }
+
+      if (j >= lines.length) {
+        throw new PseudoRuntimeError(`Missing ${endWord}.`, i + 1);
+      }
+
+      const key = sig.name.toLowerCase();
+      if (kind === "PROCEDURE") {
+        procedures[key] = { ...sig, body };
+      } else {
+        functions[key] = { ...sig, body };
+      }
+
+      i = j;
+    }
+
+    return main.map((text, idx) => ({ text, lineNo: idx + 1 }));
+  }
+
+  async function executeProcedure(name, args, callerEnv, lineNo) {
+    const def = procedures[name.toLowerCase()];
+    if (!def) throw new PseudoRuntimeError(`Unknown PROCEDURE "${name}".`, lineNo);
+
+    if (args.length !== def.params.length) {
+      throw new PseudoRuntimeError(
+        `PROCEDURE "${def.name}" expects ${def.params.length} parameter(s).`,
+        lineNo
+      );
+    }
+
+    const local = new Env(callerEnv);
+
+    def.params.forEach((p, i) => {
+      local.declare(p.name, p.type, lineNo);
+      local.set(p.name, args[i], lineNo, false);
+    });
+
+    await executeBlock(def.body, local);
+  }
+
+  async function executeFunction(name, args, callerEnv, lineNo) {
+    const def = functions[name.toLowerCase()];
+    if (!def) throw new PseudoRuntimeError(`Unknown FUNCTION "${name}".`, lineNo);
+
+    if (args.length !== def.params.length) {
+      throw new PseudoRuntimeError(
+        `FUNCTION "${def.name}" expects ${def.params.length} parameter(s).`,
+        lineNo
+      );
+    }
+
+    const local = new Env(callerEnv);
+
+    def.params.forEach((p, i) => {
+      local.declare(p.name, p.type, lineNo);
+      local.set(p.name, args[i], lineNo, false);
+    });
+
+    try {
+      await executeBlock(def.body, local);
+    } catch (signal) {
+      if (signal && signal.__return) return signal.value;
+      throw signal;
+    }
+
+    throw new PseudoRuntimeError(`FUNCTION "${def.name}" ended without RETURN.`, lineNo);
+  }
+
+  async function parseCall(line, env, lineNo) {
+    const m = line.match(/^CALL\s+([A-Za-z][A-Za-z0-9]*)(?:\s*\((.*)\))?$/i);
+    if (!m) throw new PseudoRuntimeError(`Invalid CALL statement: ${line}`, lineNo);
+
+    const args = m[2]
+      ? await Promise.all(splitTopLevel(m[2], ",").map(x => evalExpressionAsync(x, env, lineNo)))
+      : [];
+
+    return executeProcedure(m[1], args, env, lineNo);
+  }
+
+  function evaluateFunctionCallsInExpression(expr, env, lineNo) {
+    const m = String(expr).match(/\b([A-Za-z][A-Za-z0-9]*)\s*\(([^()]*)\)/);
+    if (!m) return null;
+
+    const fname = m[1];
+    const key = fname.toLowerCase();
+
+    if (!functions[key]) return null;
+
+    const args = m[2].trim()
+      ? splitTopLevel(m[2], ",").map(x => evalExpr(x, env, lineNo))
+      : [];
+
+    return {
+      functionName: fname,
+      args,
+      prefix: String(expr).slice(0, m.index),
+      suffix: String(expr).slice(m.index + m[0].length)
+    };
+  }
+
+  async function evalExpressionAsync(expr, env, lineNo) {
+    let working = String(expr).trim();
+
+    /* Resolve user-defined functions first. Built-in functions such as
+       LENGTH(), ROUND(), etc. remain handled by evalExpr(). */
+    let safety = 0;
+    while (safety++ < 50) {
+      const fnCall = evaluateFunctionCallsInExpression(working, env, lineNo);
+      if (!fnCall) break;
+
+      const value = await executeFunction(
+        fnCall.functionName,
+        fnCall.args,
+        env,
+        lineNo
+      );
+
+      working = fnCall.prefix + JSON.stringify(value) + fnCall.suffix;
+    }
+
+    return evalExpr(working, env, lineNo);
+  }
+
+  function parseFor(line, env, lineNo) {
+    const m = line.match(/^FOR\s+([A-Za-z][A-Za-z0-9]*)\s*<-\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
+    if (!m) throw new PseudoRuntimeError(`Invalid FOR statement: ${line}`, lineNo);
+
+    return {
+      identifier: m[1],
+      start: m[2],
+      end: m[3],
+      step: m[4] || "1"
+    };
+  }
+
+  async function executeBlock(block, env) {
+    for (let pos = 0; pos < block.length; pos++) {
+      const original = block[pos].text;
+      const lineNo = block[pos].lineNo;
+      const line = trimComment(original).trim();
+
+      if (!line) continue;
+
+      if (/^DECLARE\b/i.test(line)) {
+        parseDeclaration(line, env, lineNo);
+        continue;
+      }
+
+      if (/^CONSTANT\b/i.test(line)) {
+        parseConstant(line, env, lineNo);
+        continue;
+      }
+
+      if (/^OUTPUT\b/i.test(line)) {
+        await outputLine(line, env, lineNo);
+        continue;
+      }
+
+      if (/^INPUT\b/i.test(line)) {
+        const target = line.replace(/^INPUT\s+/i, "").trim();
+        await inputInto(target, env, lineNo);
+        continue;
+      }
+
+      if (/^IF\b/i.test(line)) {
+        const structure = findIfStructure(block.map(x => x.text), pos);
+        if (structure.endIndex < 0) {
+          throw new PseudoRuntimeError("Missing ENDIF.", lineNo);
+        }
+
+        let conditionText = line.replace(/^IF\s+/i, "").trim();
+        conditionText = conditionText.replace(/\s+THEN\s*$/i, "");
+
+        if (/^THEN$/i.test(conditionText) || !conditionText) {
+          if (pos + 1 >= block.length) {
+            throw new PseudoRuntimeError("Missing IF condition.", lineNo);
+          }
+          conditionText = trimComment(block[pos + 1].text).trim();
+        }
+
+        const condition = await evalExpressionAsync(conditionText, env, lineNo);
+
+        if (condition) {
+          const end = structure.elseIndex >= 0 ? structure.elseIndex : structure.endIndex;
+          const sub = block.slice(pos + 1, end);
+          await executeBlock(sub, env);
+        } else if (structure.elseIndex >= 0) {
+          const sub = block.slice(structure.elseIndex + 1, structure.endIndex);
+          await executeBlock(sub, env);
+        }
+
+        pos = structure.endIndex;
+        continue;
+      }
+
+      if (/^CASE\s+OF\b/i.test(line)) {
+        const end = findCaseStructure(block.map(x => x.text), pos);
+        if (end < 0) throw new PseudoRuntimeError("Missing ENDCASE.", lineNo);
+
+        const selectorText = line.replace(/^CASE\s+OF\s+/i, "").trim();
+        const selector = await evalExpressionAsync(selectorText, env, lineNo);
+        let matched = false;
+
+        for (let i = pos + 1; i < end; i++) {
+          const cl = trimComment(block[i].text).trim();
+          if (!cl) continue;
+
+          const otherwise = cl.match(/^OTHERWISE\s+(.*)$/i);
+          if (otherwise) {
+            if (!matched) {
+              await executeCaseStatement(otherwise[1], env, block[i].lineNo);
+              matched = true;
+            }
+            continue;
+          }
+
+          const cm = cl.match(/^(.*?)\s*:\s*(.*)$/);
+          if (!cm) {
+            throw new PseudoRuntimeError(`Invalid CASE clause: ${cl}`, block[i].lineNo);
+          }
+
+          const caseValue = await evalExpressionAsync(cm[1], env, block[i].lineNo);
+
+          if (!matched && caseValue === selector) {
+            await executeCaseStatement(cm[2], env, block[i].lineNo);
+            matched = true;
+          }
+        }
+
+        pos = end;
+        continue;
+      }
+
+      if (/^FOR\b/i.test(line)) {
+        const end = findForStructure(block.map(x => x.text), pos);
+        if (end < 0) throw new PseudoRuntimeError("Missing NEXT.", lineNo);
+
+        const spec = parseFor(line, env, lineNo);
+        let start = Number(await evalExpressionAsync(spec.start, env, lineNo));
+        const finish = Number(await evalExpressionAsync(spec.end, env, lineNo));
+        let step = Number(await evalExpressionAsync(spec.step, env, lineNo));
+
+        if (!Number.isInteger(start) || !Number.isInteger(finish) || !Number.isInteger(step) || step === 0) {
+          throw new PseudoRuntimeError("FOR bounds and STEP must evaluate to integers; STEP cannot be zero.", lineNo);
+        }
+
+        if (!env.has(spec.identifier)) env.declare(spec.identifier, "INTEGER", lineNo);
+
+        const body = block.slice(pos + 1, end);
+
+        const forward = step > 0;
+        for (let value = start; forward ? value <= finish : value >= finish; value += step) {
+          env.set(spec.identifier, value, lineNo, true);
+          await executeBlock(body, env);
+        }
+
+        pos = end;
+        continue;
+      }
+
+      if (/^REPEAT$/i.test(line)) {
+        const end = findRepeatStructure(block.map(x => x.text), pos);
+        if (end < 0) throw new PseudoRuntimeError("Missing UNTIL.", lineNo);
+
+        const body = block.slice(pos + 1, end);
+        let safety = 0;
+
+        while (true) {
+          await executeBlock(body, env);
+          const untilLine = trimComment(block[end].text).trim();
+          const conditionText = untilLine.replace(/^UNTIL\s+/i, "");
+          const condition = await evalExpressionAsync(conditionText, env, block[end].lineNo);
+          if (condition) break;
+          safety++;
+          if (safety > 10000) {
+            throw new PseudoRuntimeError("REPEAT loop exceeded 10,000 iterations.", lineNo);
+          }
+        }
+
+        pos = end;
+        continue;
+      }
+
+      if (/^WHILE\b/i.test(line)) {
+        const end = findWhileStructure(block.map(x => x.text), pos);
+        if (end < 0) throw new PseudoRuntimeError("Missing ENDWHILE.", lineNo);
+
+        let conditionText = line.replace(/^WHILE\s+/i, "").trim();
+        conditionText = conditionText.replace(/\s+DO\s*$/i, "");
+
+        const body = block.slice(pos + 1, end);
+        let safety = 0;
+
+        while (await evalExpressionAsync(conditionText, env, lineNo)) {
+          await executeBlock(body, env);
+          safety++;
+          if (safety > 10000) {
+            throw new PseudoRuntimeError("WHILE loop exceeded 10,000 iterations.", lineNo);
+          }
+        }
+
+        pos = end;
+        continue;
+      }
+
+      if (/^CALL\b/i.test(line)) {
+        await parseCall(line, env, lineNo);
+        continue;
+      }
+
+      if (/^RETURN\b/i.test(line)) {
+        const expression = line.replace(/^RETURN\s+/i, "").trim();
+        const value = await evalExpressionAsync(expression, env, lineNo);
+        throw { __return: true, value };
+      }
+
+      if (/^OPENFILE\b/i.test(line)) {
+        const m = line.match(/^OPENFILE\s+(.+?)\s+FOR\s+(READ|WRITE)$/i);
+        if (!m) throw new PseudoRuntimeError(`Invalid OPENFILE statement: ${line}`, lineNo);
+
+        const filenameValue = await evalExpressionAsync(m[1], env, lineNo);
+        const filename = String(filenameValue);
+        const mode = m[2].toUpperCase();
+
+        if (mode === "WRITE") {
+          virtualFiles[filename] = { mode: "WRITE", lines: [], readIndex: 0 };
+        } else {
+          if (!virtualFiles[filename]) {
+            virtualFiles[filename] = { mode: "READ", lines: [], readIndex: 0 };
+          }
+          virtualFiles[filename].mode = "READ";
+          virtualFiles[filename].readIndex = 0;
+        }
+        continue;
+      }
+
+      if (/^READFILE\b/i.test(line)) {
+        const m = line.match(/^READFILE\s+(.+?)\s*,\s*(.+)$/i);
+        if (!m) throw new PseudoRuntimeError(`Invalid READFILE statement: ${line}`, lineNo);
+
+        const filename = String(await evalExpressionAsync(m[1], env, lineNo));
+        const vf = virtualFiles[filename];
+        if (!vf) throw new PseudoRuntimeError(`File "${filename}" is not open.`, lineNo);
+        if (vf.mode !== "READ") throw new PseudoRuntimeError(`File "${filename}" is not open for READ.`, lineNo);
+
+        const value = vf.lines[vf.readIndex] !== undefined ? vf.lines[vf.readIndex] : "";
+        vf.readIndex++;
+        setTarget(m[2].trim(), value, env, lineNo);
+        continue;
+      }
+
+      if (/^WRITEFILE\b/i.test(line)) {
+        const m = line.match(/^WRITEFILE\s+(.+?)\s*,\s*(.+)$/i);
+        if (!m) throw new PseudoRuntimeError(`Invalid WRITEFILE statement: ${line}`, lineNo);
+
+        const filename = String(await evalExpressionAsync(m[1], env, lineNo));
+        const vf = virtualFiles[filename];
+        if (!vf) throw new PseudoRuntimeError(`File "${filename}" is not open.`, lineNo);
+        if (vf.mode !== "WRITE") throw new PseudoRuntimeError(`File "${filename}" is not open for WRITE.`, lineNo);
+
+        vf.lines.push(String(await evalExpressionAsync(m[2], env, lineNo)));
+        continue;
+      }
+
+      if (/^CLOSEFILE\b/i.test(line)) {
+        const filename = String(await evalExpressionAsync(line.replace(/^CLOSEFILE\s+/i, ""), env, lineNo));
+        if (virtualFiles[filename]) {
+          /* Persist virtual file contents to browser storage namespace. */
+          try {
+            localStorage.setItem("showmik_2210_virtualfile_" + filename, JSON.stringify(virtualFiles[filename].lines));
+          } catch {}
+          delete virtualFiles[filename];
+        }
+        continue;
+      }
+
+      /* END/structure markers are handled by their parent block. */
+      if (/^(THEN|ELSE|ENDIF|ENDCASE|NEXT|UNTIL|ENDWHILE|ENDPROCEDURE|ENDFUNCTION)\b/i.test(line)) {
+        continue;
+      }
+
+      const assignmentPos = findTopLevelAssignment(line);
+      if (assignmentPos >= 0) {
+        const target = line.slice(0, assignmentPos).trim();
+        const expression = line.slice(assignmentPos + 2).trim();
+
+        let value = await evalExpressionAsync(expression, env, lineNo);
+        setTarget(target, value, env, lineNo);
+        continue;
+      }
+
+      throw new PseudoRuntimeError(`Unknown or unsupported statement: ${line}`, lineNo);
+    }
+  }
+
+  async function executeCaseStatement(statement, env, lineNo) {
+    if (/^OUTPUT\b/i.test(statement)) {
+      await outputLine(statement, env, lineNo);
+    } else if (/^CALL\b/i.test(statement)) {
+      await parseCall(statement, env, lineNo);
+    } else {
+      const p = findTopLevelAssignment(statement);
+      if (p >= 0) {
+        const target = statement.slice(0, p).trim();
+        const expression = statement.slice(p + 2).trim();
+        const value = await evalExpressionAsync(expression, env, lineNo);
+        setTarget(target, value, env, lineNo);
+      } else {
+        throw new PseudoRuntimeError(`Unsupported CASE action: ${statement}`, lineNo);
+      }
+    }
+  }
+
+  function validateSource(source) {
+    const lines = cleanSource(source);
+    const main = collectDefinitions(lines);
+    const stack = [];
+
+    main.forEach(item => {
+      const line = trimComment(item.text).trim().toUpperCase();
+      if (!line) return;
+
+      if (/^IF\b/.test(line)) stack.push({ type: "IF", line: item.lineNo });
+      else if (/^ENDIF\b/.test(line)) {
+        const top = stack.pop();
+        if (!top || top.type !== "IF") {
+          throw new PseudoRuntimeError("ENDIF does not match an IF.", item.lineNo);
+        }
+      } else if (/^CASE\s+OF\b/.test(line)) stack.push({ type: "CASE", line: item.lineNo });
+      else if (/^ENDCASE\b/.test(line)) {
+        const top = stack.pop();
+        if (!top || top.type !== "CASE") {
+          throw new PseudoRuntimeError("ENDCASE does not match CASE.", item.lineNo);
+        }
+      } else if (/^FOR\b/.test(line)) stack.push({ type: "FOR", line: item.lineNo });
+      else if (/^NEXT\b/.test(line)) {
+        const top = stack.pop();
+        if (!top || top.type !== "FOR") {
+          throw new PseudoRuntimeError("NEXT does not match FOR.", item.lineNo);
+        }
+      } else if (/^WHILE\b/.test(line)) stack.push({ type: "WHILE", line: item.lineNo });
+      else if (/^ENDWHILE\b/.test(line)) {
+        const top = stack.pop();
+        if (!top || top.type !== "WHILE") {
+          throw new PseudoRuntimeError("ENDWHILE does not match WHILE.", item.lineNo);
+        }
+      } else if (/^REPEAT$/.test(line)) stack.push({ type: "REPEAT", line: item.lineNo });
+      else if (/^UNTIL\b/.test(line)) {
+        const top = stack.pop();
+        if (!top || top.type !== "REPEAT") {
+          throw new PseudoRuntimeError("UNTIL does not match REPEAT.", item.lineNo);
+        }
+      }
+    });
+
+    if (stack.length) {
+      const top = stack[stack.length - 1];
+      throw new PseudoRuntimeError(`Missing closing statement for ${top.type}.`, top.line);
+    }
+
+    return { lines, main };
+  }
+
+  async function compileAndRun() {
+    const source = editor.getValue();
+    output.textContent = "";
+
+    try {
+      const result = validateSource(source);
+      const env = new Env();
+
+      /* Load virtual files previously stored in localStorage. */
+      for (const key in localStorage) {
+        if (key.startsWith("showmik_2210_virtualfile_")) {
+          const fileName = key.replace("showmik_2210_virtualfile_", "");
+          try {
+            const lines = JSON.parse(localStorage.getItem(key));
+            virtualFiles[fileName] = {
+              mode: "READ",
+              lines: Array.isArray(lines) ? lines : [],
+              readIndex: 0
+            };
+          } catch {}
+        }
+      }
+
+      await executeBlock(result.main, env);
+
+      try {
+        await generateFlowchart(source);
+        showFlowchartView();
+        setStatus("Finished • Flowchart ready");
+      } catch (flowError) {
+        /*
+          The pseudocode itself has already executed successfully.
+          Keep the program result visible even if the visual renderer
+          encounters an unsupported/invalid diagram shape.
+        */
+        showOutputView();
+        const flowMessage = flowError && flowError.message
+          ? flowError.message
+          : String(flowError);
+        output.appendChild(
+          document.createTextNode("\n[Flowchart generation warning] " + flowMessage + "\n")
+        );
+        setStatus("Finished • Flowchart unavailable");
+      }
+    } catch (e) {
+      if (e && e.__return) {
+        output.textContent += String(e.value) + "\n";
+        try {
+          await generateFlowchart(source);
+          showFlowchartView();
+          setStatus("Finished • Flowchart ready");
+        } catch (flowError) {
+          setStatus("Finished");
+        }
+        return;
+      }
+
+      const line = e && e.lineNo ? `Line ${e.lineNo}: ` : "";
+      output.textContent += line + (e && e.message ? e.message : String(e)) + "\n";
+      setStatus("Error");
+    }
+  }
+
+  function checkSyntax() {
+    output.textContent = "";
+
+    try {
+      validateSource(editor.getValue());
+      writeOutput("✓ Syntax check passed.");
+      setStatus("Syntax OK");
+    } catch (e) {
+      const line = e && e.lineNo ? `Line ${e.lineNo}: ` : "";
+      writeOutput("✗ " + line + (e && e.message ? e.message : String(e)));
+      setStatus("Syntax error");
+    }
+  }
+
+  function setStatus(text) {
+    saveState.textContent = text;
+    if (text === "Error" || text === "Syntax error") {
+      saveState.style.color = "#f18478";
+    } else if (text.startsWith("Finished") || text === "Syntax OK" || text === "Flowchart ready") {
+      saveState.style.color = "#6fd496";
+    } else {
+      saveState.style.color = "";
+    }
+  }
+
+  function clearOutput() {
+    output.textContent = "";
+    setStatus("Saved in browser");
+  }
+
+  function clearCode() {
+    editor.setValue("");
+    flowchart.innerHTML = "";
+    showOutputView();
+    editor.focus();
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(editor.getValue());
+    } catch {
+      editor.focus();
+      editor.execCommand("selectAll");
+      document.execCommand("copy");
+      editor.execCommand("goDocEnd");
+    }
+    setStatus("Copied");
+    setTimeout(() => setStatus("Saved in browser"), 1200);
+  }
+
+  function downloadCode() {
+    const tab = activeTab();
+    const blob = new Blob([editor.getValue()], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileNameSafe(tab.name);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Downloaded");
+    setTimeout(() => setStatus("Saved in browser"), 1200);
+  }
+
+  function resetCode() {
+    if (!window.confirm("Reset the current pseudocode file to the default code?")) return;
+    editor.setValue(DEFAULT_CODE);
+    output.textContent = "";
+    flowchart.innerHTML = "";
+    showOutputView();
+    const tab = activeTab();
+    tab.code = DEFAULT_CODE;
+    tab.dirty = false;
+    renderTabs();
+    saveWorkspace();
+    editor.focus();
+  }
+
+  /* =========================================================
+     Editor setup
+     ========================================================= */
+
+  editor = CodeMirror.fromTextArea(textarea, {
+    mode: "cambridge-2210",
+    theme: "2210",
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    smartIndent: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    styleActiveLine: true,
+    lineWrapping: false,
+    extraKeys: {
+      "Ctrl-Space": cm => CodeMirror.showHint(cm, pseudocodeHint, { completeSingle: false }),
+      "Ctrl-Enter": compileAndRun,
+      "Cmd-Enter": compileAndRun,
+      "Ctrl-N": newTab,
+      "Cmd-N": newTab,
+      "Tab": cm => {
+        if (cm.somethingSelected()) cm.execCommand("indentMore");
+        else cm.replaceSelection("    ", "end");
+      }
+    }
+  });
+
+  let hintTimer = null;
+  editor.on("inputRead", (cm, change) => {
+    if (!change.text || !change.text[0]) return;
+    if (!/[A-Za-z]/.test(change.text[0])) return;
+
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => {
+      const cur = cm.getCursor();
+      const line = cm.getLine(cur.line).slice(0, cur.ch);
+      if (/[A-Za-z][A-Za-z0-9]*$/.test(line)) {
+        CodeMirror.showHint(cm, pseudocodeHint, { completeSingle: false });
+      }
+    }, 140);
+  });
+
+  editor.on("change", () => {
+    const tab = activeTab();
+    if (!tab) return;
+
+    tab.code = editor.getValue();
+    tab.dirty = true;
+    renderTabs();
+    scheduleSave();
+    updateIndentGuides();
+  });
+
+  document.getElementById("runBtn").addEventListener("click", () => {
+    outputVisibility.checked = true;
+    applyOutputVisibility();
+    compileAndRun();
+  });
+
+  document.getElementById("checkBtn").addEventListener("click", () => {
+    outputVisibility.checked = true;
+    applyOutputVisibility();
+    showOutputView();
+    checkSyntax();
+  });
+
+  document.getElementById("flowchartBtn").addEventListener("click", async () => {
+    outputVisibility.checked = true;
+    applyOutputVisibility();
+
+    try {
+      validateSource(editor.getValue());
+      await generateFlowchart(editor.getValue());
+      showFlowchartView();
+      setStatus("Flowchart ready");
+    } catch (e) {
+      showOutputView();
+      const line = e && e.lineNo ? `Line ${e.lineNo}: ` : "";
+      output.textContent = "✗ " + line + (e && e.message ? e.message : String(e));
+      setStatus("Flowchart error");
+    }
+  });
+
+  outputViewBtn.addEventListener("click", showOutputView);
+
+  flowchartViewBtn.addEventListener("click", async () => {
+    try {
+      if (!flowchart.innerHTML.trim() || flowchart.innerHTML.includes("flowchart-empty")) {
+        await generateFlowchart(editor.getValue());
+      }
+      showFlowchartView();
+    } catch (e) {
+      showOutputView();
+      output.textContent = (e && e.message) ? e.message : String(e);
+      setStatus("Flowchart error");
+    }
+  });
+
+  document.getElementById("clearOutputBtn").addEventListener("click", clearOutput);
+  document.getElementById("clearCodeBtn").addEventListener("click", clearCode);
+  document.getElementById("copyBtn").addEventListener("click", copyCode);
+  document.getElementById("downloadBtn").addEventListener("click", downloadCode);
+  document.getElementById("renameBtn").addEventListener("click", renameTab);
+  document.getElementById("resetBtn").addEventListener("click", resetCode);
+  document.getElementById("newTabTop").addEventListener("click", newTab);
+  tabPlus.addEventListener("click", newTab);
+  outputVisibility.addEventListener("change", applyOutputVisibility);
+
+  createIndentGuideLayer();
+
+  showOutputView();
+
+  const workspace = loadWorkspace();
+  tabs = workspace.tabs;
+  activeTabId = workspace.activeTabId;
+  outputVisibility.checked = workspace.outputVisible !== false;
+
+  const initial = activeTab();
+  editor.setValue(initial.code);
+  editorFileName.textContent = initial.name;
+
+  renderTabs();
+  applyOutputVisibility();
+  editor.refresh();
+  updateIndentGuides();
+  editor.focus();
+
+  window.addEventListener("beforeunload", () => {
+    const tab = activeTab();
+    if (tab) tab.code = editor.getValue();
+    saveWorkspace();
+  });
+})();
+</script>
+</body>
+</html>
