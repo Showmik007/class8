@@ -127,6 +127,15 @@
       color: #72d39a;
     }
 
+    #localFileInput { display: none !important; }
+
+    @media (max-width: 720px) {
+      .header-right { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+      #openFromPCTop, #newTabTop { font-size: 11px; padding: 7px 9px; }
+      .files-toolbar { flex-wrap: wrap; }
+      .file-storage-note { flex-basis: 100%; }
+    }
+
     .new-tab-top {
       border: 1px solid var(--border);
       background: #1b2028;
@@ -833,6 +842,80 @@
       }
     }
 
+
+    /* Python to Cambridge 2210 pseudocode converter */
+    .convert-modal-card {
+      width: min(900px, 100%);
+      max-height: 92vh;
+    }
+
+    #convertedPseudo {
+      display: block;
+      width: 100%;
+      min-height: 300px;
+      flex: 1;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      padding: 14px;
+      background: #0b1016;
+      color: #e7edf2;
+      font: 13px/1.65 Consolas, "Courier New", monospace;
+      tab-size: 4;
+    }
+
+    .convert-description {
+      padding: 10px 13px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      background: #11171d;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .convert-warning-area {
+      display: none;
+      max-height: 120px;
+      overflow: auto;
+      padding: 8px 13px;
+      border-bottom: 1px solid #534322;
+      background: #211c12;
+      color: #e9c979;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .convert-warning-area.show {
+      display: block;
+    }
+
+    .convert-warning-area ul {
+      margin: 5px 0 0;
+      padding-left: 18px;
+    }
+
+    .convert-footer-left {
+      margin-right: auto;
+      color: var(--muted);
+      font-size: 10px;
+      align-self: center;
+    }
+
+    @media (max-width: 600px) {
+      .convert-modal-card {
+        max-height: 95vh;
+      }
+
+      #convertedPseudo {
+        min-height: 260px;
+        font-size: 12px;
+      }
+
+      .convert-footer-left {
+        width: 100%;
+      }
+    }
+
     .footer-note {
       padding: 0 12px 11px;
       color: var(--muted);
@@ -1024,7 +1107,9 @@
 
       <div class="header-right">
         <span id="saveState" class="save-state saved">Saved in browser</span>
+        <button id="openFromPCTop" class="new-tab-top" type="button" title="Open a .py file or import data files from your computer">📂 Open from PC</button>
         <button id="newTabTop" class="new-tab-top" type="button">＋ New Tab</button>
+        <input id="localFileInput" type="file" hidden multiple accept=".py,.txt,.csv,.tsv,.json,.md,.dat,.log,.xml,.html,.htm,.yaml,.yml,.ini,.cfg,.sql" />
       </div>
     </header>
 
@@ -1049,6 +1134,7 @@
 
           <div class="toolbar">
             <button id="runBtn" type="button">▶ Run Code</button>
+            <button id="convertToPseudoBtn" class="secondary" type="button">⇄ Python → Pseudocode</button>
             <button id="filesBtn" class="secondary" type="button">Files</button>
             <button id="clearOutputBtn" class="secondary" type="button">Clear Output</button>
             <button id="clearCodeBtn" class="secondary" type="button">Clear Code</button>
@@ -1086,9 +1172,10 @@
 
           <div id="filesView" class="files-view">
             <div class="files-toolbar">
+              <button id="importFromPCBtn" class="tool-btn" type="button">📂 Import from PC</button>
               <button id="createTxtBtn" class="tool-btn" type="button">＋ Create TXT</button>
               <button id="refreshFilesBtn" class="tool-btn secondary" type="button">↻ Refresh</button>
-              <span class="file-storage-note">Python-created text files are saved in this browser.</span>
+              <span class="file-storage-note">Imported and Python-created files are saved in this browser workspace.</span>
             </div>
             <div id="fileList" class="file-list"></div>
           </div>
@@ -1097,7 +1184,7 @@
         </div>
 
         <div class="footer-note">
-          Code is stored automatically in this browser using localStorage.
+          Code and imported text/data files are stored in this browser. Use “Open from PC” to choose local files; this page cannot browse your PC without your selection.
         </div>
       </section>
     </main>
@@ -1114,6 +1201,27 @@
       <div class="file-modal-footer">
         <button id="fileModalCancel" class="tool-btn secondary" type="button">Cancel</button>
         <button id="fileModalSave" class="tool-btn" type="button">Save File</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="convertModal" class="file-modal" aria-hidden="true">
+    <div class="file-modal-card convert-modal-card">
+      <div class="file-modal-header">
+        <h3 class="file-modal-title">Python → Cambridge 2210 Pseudocode</h3>
+        <button id="convertModalClose" class="file-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="convert-description">
+        Converts common Python statements into readable Cambridge-style pseudocode. Review inferred data types and any warnings before using the result in an exam answer.
+      </div>
+      <div id="convertWarnings" class="convert-warning-area"></div>
+      <textarea id="convertedPseudo" spellcheck="false" aria-label="Converted pseudocode"></textarea>
+      <div class="file-modal-footer">
+        <span class="convert-footer-left">Local conversion • No API required</span>
+        <button id="convertCopyBtn" class="tool-btn secondary" type="button">Copy</button>
+        <button id="convertDownloadBtn" class="tool-btn secondary" type="button">Download .pseudo</button>
+        <button id="convertOpenTabBtn" class="tool-btn" type="button">Open as Tab</button>
+        <button id="convertModalCloseBottom" class="tool-btn secondary" type="button">Close</button>
       </div>
     </div>
   </div>
@@ -1165,6 +1273,9 @@
     const fileModalCancel = document.getElementById("fileModalCancel");
     const fileModalSave = document.getElementById("fileModalSave");
     const engineStatus = document.getElementById("engineStatus");
+    const localFileInput = document.getElementById("localFileInput");
+    const openFromPCTop = document.getElementById("openFromPCTop");
+    const importFromPCBtn = document.getElementById("importFromPCBtn");
 
     let editor;
     let tabs = [];
@@ -1730,6 +1841,125 @@
       editor.focus();
     }
 
+    function openPythonSourceAsTab(name, code) {
+      const cleanName = sanitizeFileName(name);
+      let tab = tabs.find(t => t.kind !== "file" && t.name.toLowerCase() === cleanName.toLowerCase());
+
+      if (tab && tab.dirty && !window.confirm(`"${tab.name}" has unsaved edits. Replace them with the file from your PC?`)) {
+        return false;
+      }
+
+      if (!tab) {
+        tab = {
+          id: createId(),
+          name: cleanName,
+          code: String(code || ""),
+          dirty: false,
+          kind: "python",
+          fileName: null
+        };
+        tabs.push(tab);
+      } else {
+        tab.name = cleanName;
+        tab.code = String(code || "");
+        tab.dirty = false;
+        tab.kind = "python";
+        tab.fileName = null;
+      }
+
+      activeTabId = tab.id;
+      applyTabToEditor(tab);
+      output.textContent = "";
+      showOutputView();
+      renderTabs();
+      saveWorkspace();
+      editor.focus();
+      return true;
+    }
+
+    function allowedLocalTextFile(name) {
+      return /\.(py|txt|csv|tsv|json|md|dat|log|xml|html?|ya?ml|ini|cfg|sql)$/i.test(String(name || ""));
+    }
+
+    async function importLocalFiles(fileList) {
+      const selected = Array.from(fileList || []);
+      if (!selected.length) return;
+
+      const maxFileBytes = 5 * 1024 * 1024;
+      let imported = 0;
+      let skipped = 0;
+      const importedTextNames = [];
+      let pythonOpened = false;
+      const errors = [];
+
+      for (const file of selected) {
+        if (!allowedLocalTextFile(file.name)) {
+          skipped++;
+          errors.push(`${file.name}: unsupported file type. Choose a Python or text/data file.`);
+          continue;
+        }
+        if (file.size > maxFileBytes) {
+          skipped++;
+          errors.push(`${file.name}: larger than the 5 MB per-file limit.`);
+          continue;
+        }
+
+        let content;
+        try {
+          content = await file.text();
+        } catch (error) {
+          skipped++;
+          errors.push(`${file.name}: could not read this file.`);
+          continue;
+        }
+
+        const safeName = safeVirtualFileName(file.name);
+        if (/\.py$/i.test(safeName)) {
+          const opened = openPythonSourceAsTab(safeName, content);
+          if (opened) {
+            pythonOpened = true;
+            imported++;
+          } else {
+            skipped++;
+          }
+          continue;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(virtualFiles, safeName) && virtualFiles[safeName] !== content) {
+          if (!window.confirm(`"${safeName}" already exists in the browser workspace. Replace it with the PC file?`)) {
+            skipped++;
+            continue;
+          }
+        }
+        virtualFiles[safeName] = content;
+        importedTextNames.push(safeName);
+        imported++;
+      }
+
+      if (importedTextNames.length) saveVirtualFiles();
+
+      if (!pythonOpened && importedTextNames.length === 1) {
+        openFileAsTab(importedTextNames[0]);
+      } else if (!pythonOpened && importedTextNames.length > 1) {
+        showFilesView();
+      }
+
+      const summary = `Imported ${imported} file${imported === 1 ? "" : "s"}${skipped ? `; skipped ${skipped}` : ""}.`;
+      setStatus(imported ? summary : "No files imported", skipped > 0 && imported === 0);
+      setEngineStatus(
+        `${summary} Python files open in editor tabs; text/data files are available to Python open() in the Files workspace.` +
+          (errors.length ? "\n" + errors.join("\n") : ""),
+        true
+      );
+      renderFileList();
+    }
+
+    function promptForLocalFiles() {
+      if (!localFileInput) return;
+      localFileInput.value = "";
+      localFileInput.click();
+    }
+
     function createVirtualTxt() {
       let proposed = window.prompt("Enter file name:", "Data.txt");
       if (proposed === null) return;
@@ -1926,6 +2156,863 @@ os.chdir("/showmik_workspace")
       const changedFiles = await syncFilesFromPyodide();
 
       return { stdout, stderr, changedFiles };
+    }
+
+
+    /* =========================================================
+       Python -> Cambridge O Level 2210 pseudocode converter
+       This is a local, rule-based converter; it does not call an API.
+       ========================================================= */
+
+    function pyStripComment(line) {
+      let quote = null;
+      let triple = false;
+      let escaped = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+
+        if (quote && ch === "\\") {
+          escaped = true;
+          continue;
+        }
+
+        if (quote) {
+          if (triple) {
+            if (line.slice(i, i + 3) === quote.repeat(3)) {
+              quote = null;
+              triple = false;
+              i += 2;
+            }
+          } else if (ch === quote) {
+            quote = null;
+          }
+          continue;
+        }
+
+        if ((ch === "f" || ch === "F" || ch === "r" || ch === "R" || ch === "b" || ch === "B") &&
+            (line[i + 1] === "'" || line[i + 1] === '"')) {
+          continue;
+        }
+
+        if (ch === "'" || ch === '"') {
+          quote = ch;
+          if (line.slice(i, i + 3) === ch.repeat(3)) {
+            triple = true;
+            i += 2;
+          }
+          continue;
+        }
+
+        if (ch === "#") return line.slice(0, i);
+      }
+
+      return line;
+    }
+
+    function pySplitTopLevel(text, delimiter = ",") {
+      const parts = [];
+      let start = 0;
+      let depthParen = 0;
+      let depthBracket = 0;
+      let depthBrace = 0;
+      let quote = null;
+      let triple = false;
+      let escaped = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+
+        if (quote && ch === "\\") {
+          escaped = true;
+          continue;
+        }
+
+        if (quote) {
+          if (triple && text.slice(i, i + 3) === quote.repeat(3)) {
+            quote = null;
+            triple = false;
+            i += 2;
+          } else if (!triple && ch === quote) {
+            quote = null;
+          }
+          continue;
+        }
+
+        if ((ch === "f" || ch === "F" || ch === "r" || ch === "R" || ch === "b" || ch === "B") &&
+            (text[i + 1] === "'" || text[i + 1] === '"')) {
+          continue;
+        }
+
+        if (ch === "'" || ch === '"') {
+          quote = ch;
+          if (text.slice(i, i + 3) === ch.repeat(3)) {
+            triple = true;
+            i += 2;
+          }
+          continue;
+        }
+
+        if (ch === "(") depthParen++;
+        else if (ch === ")") depthParen--;
+        else if (ch === "[") depthBracket++;
+        else if (ch === "]") depthBracket--;
+        else if (ch === "{") depthBrace++;
+        else if (ch === "}") depthBrace--;
+
+        if (ch === delimiter && depthParen === 0 && depthBracket === 0 && depthBrace === 0) {
+          parts.push(text.slice(start, i).trim());
+          start = i + 1;
+        }
+      }
+
+      parts.push(text.slice(start).trim());
+      return parts.filter((part, index) => part !== "" || index < parts.length - 1);
+    }
+
+    function pyTopLevelAssignment(line) {
+      let quote = null;
+      let depthParen = 0;
+      let depthBracket = 0;
+      let escaped = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (quote && ch === "\\") {
+          escaped = true;
+          continue;
+        }
+        if (quote) {
+          if (ch === quote) quote = null;
+          continue;
+        }
+        if (ch === "'" || ch === '"') {
+          quote = ch;
+          continue;
+        }
+
+        if (ch === "(") depthParen++;
+        if (ch === ")") depthParen--;
+        if (ch === "[") depthBracket++;
+        if (ch === "]") depthBracket--;
+
+        if (depthParen || depthBracket) continue;
+
+        if (ch === "=") {
+          const prev = line[i - 1] || "";
+          const next = line[i + 1] || "";
+          if (prev === "=" || prev === "!" || prev === "<" || prev === ">" ||
+              next === "=") continue;
+
+          if (prev === "+" || prev === "-" || prev === "*" || prev === "/" || prev === "%") {
+            return { index: i - 1, operator: prev + "=" };
+          }
+
+          return { index: i, operator: "=" };
+        }
+      }
+
+      return null;
+    }
+
+    function pyLiteralType(expr, knownTypes) {
+      const text = String(expr || "").trim();
+
+      if (/^(?:int)\s*\(/i.test(text)) return "INTEGER";
+      if (/^(?:float)\s*\(/i.test(text)) return "REAL";
+      if (/^(?:bool)\s*\(/i.test(text)) return "BOOLEAN";
+      if (/^(?:str|input)\s*\(/i.test(text)) return "STRING";
+      if (/^(?:True|False)$/i.test(text) || /(?:==|!=|<=|>=|<|>|\b(?:and|or|not|in|is)\b)/i.test(text)) {
+        return "BOOLEAN";
+      }
+      if (/^(['"]).*\1$/s.test(text) || /^f(['"])/i.test(text)) return "STRING";
+      if (/^-?\d+$/.test(text) || /^len\s*\(/i.test(text)) return "INTEGER";
+      if (/^-?(?:\d+\.\d*|\.\d+)(?:e[-+]?\d+)?$/i.test(text) || /(^|[^/])\/([^/]|$)/.test(text)) {
+        return "REAL";
+      }
+
+      const listMatch = text.match(/^\[(.*)\]$/s);
+      if (listMatch) {
+        const values = pySplitTopLevel(listMatch[1]);
+        if (!values.length || (values.length === 1 && values[0] === "")) return "ARRAY";
+        if (values.some(v => /^\[/.test(v.trim()))) return "ARRAY";
+        return "ARRAY";
+      }
+
+      const name = text.match(/^([A-Za-z_]\w*)$/);
+      if (name && knownTypes.has(name[1])) return knownTypes.get(name[1]);
+      return "INTEGER";
+    }
+
+    function pyArrayLiteral(expr) {
+      const text = String(expr || "").trim();
+      const match = text.match(/^\[(.*)\]$/s);
+      if (!match) return null;
+
+      const values = pySplitTopLevel(match[1]);
+      if (values.length === 1 && values[0] === "") return [];
+      return values;
+    }
+
+    function pyConvertExpression(expr, warnings, lineNo) {
+      let text = String(expr || "").trim();
+
+      // Remove simple Python casts that are represented by the declared variable type.
+      text = text.replace(/\bint\s*\(([^()]*)\)/gi, "($1)");
+      text = text.replace(/\bfloat\s*\(([^()]*)\)/gi, "($1)");
+      text = text.replace(/\bstr\s*\(([^()]*)\)/gi, "($1)");
+
+      text = text.replace(/\blen\s*\(([^()]*)\)/gi, "LENGTH($1)");
+      text = text.replace(/\.lower\s*\(\s*\)/gi, "");
+      text = text.replace(/\.upper\s*\(\s*\)/gi, "");
+
+      // Translate basic MOD / DIV operations with simple operands.
+      text = text.replace(
+        /([A-Za-z_]\w*|\d+(?:\.\d+)?|\([^()]+\))\s*%\s*([A-Za-z_]\w*|\d+(?:\.\d+)?|\([^()]+\))/g,
+        "MOD($1, $2)"
+      );
+      text = text.replace(
+        /([A-Za-z_]\w*|\d+(?:\.\d+)?|\([^()]+\))\s*\/\/\s*([A-Za-z_]\w*|\d+(?:\.\d+)?|\([^()]+\))/g,
+        "DIV($1, $2)"
+      );
+
+      text = text.replace(/!==?/g, "<>");
+      text = text.replace(/===?/g, "=");
+      text = text.replace(/\bTrue\b/g, "TRUE");
+      text = text.replace(/\bFalse\b/g, "FALSE");
+      text = text.replace(/\band\b/g, "AND");
+      text = text.replace(/\bor\b/g, "OR");
+      text = text.replace(/\bnot\b/g, "NOT");
+
+      if (/\b(?:None|lambda|yield|await|async|is|in)\b/.test(text)) {
+        warnings.push(`Line ${lineNo}: Python-specific expression may need manual pseudocode conversion: ${text}`);
+      }
+      if (/\[[^\]]*:[^\]]*\]/.test(text)) {
+        warnings.push(`Line ${lineNo}: Python slicing is not converted automatically: ${text}`);
+      }
+
+      return text;
+    }
+
+    function pythonTo2210Pseudocode(sourceText) {
+      const warnings = [];
+      const sourceLines = String(sourceText || "").replace(/\r\n/g, "\n").split("\n");
+      const rows = sourceLines.map((raw, index) => {
+        const noComment = pyStripComment(raw);
+        const expanded = noComment.replace(/\t/g, "    ");
+        const trimmed = expanded.trim();
+        const indent = expanded.match(/^ */)[0].length;
+        return {
+          lineNo: index + 1,
+          raw,
+          trimmed,
+          indent,
+          isComment: /^\s*#/.test(raw)
+        };
+      });
+
+      const types = new Map();
+      const arrays = new Map();
+      const declaredInOrder = [];
+
+      function remember(name, type, arrayInfo = null) {
+        if (!name || !/^[A-Za-z_]\w*$/.test(name)) return;
+        if (!types.has(name)) declaredInOrder.push(name);
+        if (arrayInfo) {
+          arrays.set(name, arrayInfo);
+          types.set(name, "ARRAY");
+        } else if (type && type !== "ARRAY") {
+          if (types.get(name) !== "ARRAY") types.set(name, type);
+        }
+      }
+
+      function inferFromExpression(expr) {
+        const text = String(expr || "").trim();
+        const list = pyArrayLiteral(text);
+
+        if (list) {
+          if (!list.length) {
+            return { type: "ARRAY", array: { values: [], elementType: "INTEGER", rows: 1, cols: 0 } };
+          }
+
+          const nested = list.every(item => Array.isArray(pyArrayLiteral(item)));
+          if (nested) {
+            const rows = list.map(item => pyArrayLiteral(item));
+            const colCount = rows[0] ? rows[0].length : 0;
+            const elementTypes = rows.flat().map(value => pyLiteralType(value, types));
+            const elementType = elementTypes.includes("STRING") ? "STRING"
+              : elementTypes.includes("REAL") ? "REAL"
+              : elementTypes.includes("BOOLEAN") ? "BOOLEAN" : "INTEGER";
+            return { type: "ARRAY", array: { values: rows, elementType, rows: rows.length, cols: colCount } };
+          }
+
+          const itemTypes = list.map(value => pyLiteralType(value, types));
+          const elementType = itemTypes.includes("STRING") ? "STRING"
+            : itemTypes.includes("REAL") ? "REAL"
+            : itemTypes.includes("BOOLEAN") ? "BOOLEAN" : "INTEGER";
+          return { type: "ARRAY", array: { values: list, elementType, rows: 1, cols: list.length } };
+        }
+
+        return { type: pyLiteralType(text, types), array: null };
+      }
+
+      // Pass 1: gather obvious declaration types, array lengths and FOR variables.
+      rows.forEach(row => {
+        const line = row.trimmed;
+        if (!line || row.isComment) return;
+
+        let loop = line.match(/^for\s+([A-Za-z_]\w*)\s+in\s+range\s*\(/i);
+        if (loop) remember(loop[1], "INTEGER");
+
+        const assignment = pyTopLevelAssignment(line);
+        if (assignment) {
+          const left = line.slice(0, assignment.index).trim();
+          let right = line.slice(assignment.index + (assignment.operator === "=" ? 1 : 2)).trim();
+          const target = left.match(/^([A-Za-z_]\w*)$/);
+
+          if (target) {
+            const name = target[1];
+
+            if (/^int\s*\(\s*input\s*\(/i.test(right)) {
+              remember(name, "INTEGER");
+            } else if (/^float\s*\(\s*input\s*\(/i.test(right)) {
+              remember(name, "REAL");
+            } else if (/^bool\s*\(\s*input\s*\(/i.test(right)) {
+              remember(name, "BOOLEAN");
+            } else if (/^input\s*\(/i.test(right)) {
+              remember(name, "STRING");
+            } else {
+              const inferred = inferFromExpression(right);
+              if (inferred.array) remember(name, "ARRAY", inferred.array);
+              else remember(name, inferred.type);
+            }
+          }
+        }
+      });
+
+      // Pass 2: iterate types once more so assignments based on earlier variables keep their type.
+      rows.forEach(row => {
+        const line = row.trimmed;
+        if (!line || row.isComment) return;
+
+        const assignment = pyTopLevelAssignment(line);
+        if (!assignment) return;
+
+        const left = line.slice(0, assignment.index).trim();
+        const right = line.slice(assignment.index + (assignment.operator === "=" ? 1 : 2)).trim();
+        const target = left.match(/^([A-Za-z_]\w*)$/);
+        if (!target || arrays.has(target[1])) return;
+
+        const inferred = inferFromExpression(right);
+        if (inferred.type && inferred.type !== "ARRAY") remember(target[1], inferred.type);
+      });
+
+      const declarations = [];
+      const grouped = new Map();
+
+      declaredInOrder.forEach(name => {
+        if (arrays.has(name)) return;
+        const type = types.get(name) || "INTEGER";
+        if (!grouped.has(type)) grouped.set(type, []);
+        grouped.get(type).push(name);
+      });
+
+      grouped.forEach((names, type) => {
+        declarations.push(`DECLARE ${names.join(", ")} : ${type}`);
+      });
+
+      arrays.forEach((info, name) => {
+        if (!info || !info.values || info.values.length === 0) {
+          warnings.push(`Array "${name}": an empty list has no length/type information; declare its bounds manually.`);
+          declarations.push(`// TODO: DECLARE ${name} : ARRAY[...] OF INTEGER`);
+          return;
+        }
+
+        if (info.rows > 1) {
+          declarations.push(
+            `DECLARE ${name} : ARRAY[0:${info.rows - 1}, 0:${info.cols - 1}] OF ${info.elementType}`
+          );
+          warnings.push(`Array "${name}": a 2D literal was detected. Check the indexing notation against your required 2210 syntax.`);
+        } else {
+          declarations.push(
+            `DECLARE ${name} : ARRAY[0:${info.cols - 1}] OF ${info.elementType}`
+          );
+        }
+      });
+
+      function indentText(level) {
+        return "    ".repeat(Math.max(0, Math.floor(level / 4)));
+      }
+
+      function convertFString(arg, lineNo) {
+        const match = arg.match(/^f(["'])(.*)\1$/is);
+        if (!match) return null;
+
+        const content = match[2];
+        const parts = [];
+        let last = 0;
+        const re = /\{([A-Za-z_]\w*)\}/g;
+        let m;
+
+        while ((m = re.exec(content))) {
+          if (m.index > last) parts.push(JSON.stringify(content.slice(last, m.index)));
+          parts.push(m[1]);
+          last = m.index + m[0].length;
+        }
+        if (last < content.length) parts.push(JSON.stringify(content.slice(last)));
+        if (!parts.length) parts.push(JSON.stringify(content));
+
+        if (/\{[^}]*[+\-*/()][^}]*\}/.test(content)) {
+          warnings.push(`Line ${lineNo}: formatted expressions inside f-strings need manual review.`);
+        }
+        return parts.join(", ");
+      }
+
+      function outputPrint(line, lineNo, indent) {
+        const match = line.match(/^print\s*\((.*)\)\s*$/s);
+        if (!match) return null;
+
+        const args = pySplitTopLevel(match[1]);
+        const kept = [];
+        args.forEach(arg => {
+          if (/^(?:sep|end)\s*=/.test(arg)) {
+            warnings.push(`Line ${lineNo}: Python print ${arg.split("=")[0]} option is not represented in pseudocode.`);
+          } else {
+            const fString = convertFString(arg, lineNo);
+            kept.push(fString !== null ? fString : pyConvertExpression(arg, warnings, lineNo));
+          }
+        });
+
+        return `${indent}OUTPUT ${kept.length ? kept.join(", ") : '""'}`;
+      }
+
+      const outputLines = [];
+      const stack = [];
+
+      function closeTopBlock() {
+        const block = stack.pop();
+        if (!block) return;
+
+        const outIndent = indentText(block.indent);
+        if (block.type === "IF") {
+          for (let n = 0; n < (block.endCount || 1); n++) outputLines.push(`${outIndent}ENDIF`);
+        } else if (block.type === "FOR") {
+          outputLines.push(`${outIndent}NEXT ${block.variable}`);
+        } else if (block.type === "WHILE") {
+          outputLines.push(`${outIndent}ENDWHILE`);
+        } else if (block.type === "PROCEDURE") {
+          outputLines.push(`${outIndent}ENDPROCEDURE`);
+        }
+      }
+
+      function rangeBounds(inner, lineNo) {
+        const args = pySplitTopLevel(inner);
+        if (args.length < 1 || args.length > 3) {
+          warnings.push(`Line ${lineNo}: unsupported range() arguments; review this loop manually.`);
+          return null;
+        }
+
+        let startValue = "0";
+        let stopValue = args[0];
+        let stepValue = "1";
+
+        if (args.length >= 2) {
+          startValue = args[0];
+          stopValue = args[1];
+        }
+        if (args.length === 3) stepValue = args[2];
+
+        // Convert range(len(items)) to the known array index bounds when possible.
+        const lenOnly = stopValue.match(/^len\s*\(\s*([A-Za-z_]\w*)\s*\)$/i);
+        if (lenOnly) {
+          const arrayInfo = arrays.get(lenOnly[1]);
+          if (arrayInfo && arrayInfo.rows === 1 && arrayInfo.cols > 0) {
+            stopValue = String(arrayInfo.cols);
+          } else {
+            stopValue = `LENGTH(${lenOnly[1]})`;
+            warnings.push(
+              `Line ${lineNo}: length of "${lenOnly[1]}" was not known at conversion time; review the FOR upper bound.`
+            );
+          }
+        } else {
+          stopValue = pyConvertExpression(stopValue, warnings, lineNo);
+        }
+
+        startValue = pyConvertExpression(startValue, warnings, lineNo);
+        stepValue = pyConvertExpression(stepValue, warnings, lineNo);
+
+        const numericStep = Number(stepValue);
+        const isNegative = Number.isFinite(numericStep) && numericStep < 0;
+
+        function exclusiveEnd(value, negative) {
+          if (/^-?\d+$/.test(value.trim())) {
+            return String(Number(value.trim()) + (negative ? 1 : -1));
+          }
+          return `(${value}) ${negative ? "+" : "-"} 1`;
+        }
+
+        // If using range(0, len(array)), make the upper bound LENGTH(array)-1.
+        const end = exclusiveEnd(stopValue, isNegative);
+        return { start: startValue, end, step: stepValue, includeStep: stepValue !== "1" };
+      }
+
+      rows.forEach(row => {
+        const original = row.raw;
+        const line = row.trimmed;
+        const indent = indentText(row.indent);
+
+        if (!line) {
+          if (original.trim() === "") outputLines.push("");
+          return;
+        }
+
+        if (row.isComment) {
+          outputLines.push(`${indent}// ${original.trim().replace(/^#+\s?/, "")}`);
+          return;
+        }
+
+        // Handle branches before the standard dedent logic so the matching IF stays open.
+        const isElif = /^elif\b/i.test(line);
+        const isElse = /^else\s*:/i.test(line);
+
+        while (stack.length && stack[stack.length - 1].indent > row.indent) {
+          closeTopBlock();
+        }
+
+        if (isElif || isElse) {
+          while (stack.length && stack[stack.length - 1].indent === row.indent &&
+                 stack[stack.length - 1].type !== "IF") {
+            closeTopBlock();
+          }
+
+          const ifBlock = stack[stack.length - 1];
+          if (!ifBlock || ifBlock.type !== "IF" || ifBlock.indent !== row.indent) {
+            warnings.push(`Line ${row.lineNo}: ELSE/ELIF does not match a visible IF block.`);
+            outputLines.push(`${indent}// TODO: manually convert ${line}`);
+            return;
+          }
+
+          if (isElif) {
+            const cond = line.replace(/^elif\s+/i, "").replace(/:\s*$/, "");
+            outputLines.push(`${indent}ELSE IF ${pyConvertExpression(cond, warnings, row.lineNo)} THEN`);
+            ifBlock.endCount = (ifBlock.endCount || 1) + 1;
+            ifBlock.hasElse = true;
+          } else {
+            outputLines.push(`${indent}ELSE`);
+            ifBlock.hasElse = true;
+          }
+          return;
+        }
+
+        while (stack.length && stack[stack.length - 1].indent >= row.indent) {
+          closeTopBlock();
+        }
+
+        let match;
+
+        // Comments and common block structures
+        if ((match = line.match(/^if\s+(.+)\s*:\s*$/i))) {
+          outputLines.push(`${indent}IF ${pyConvertExpression(match[1], warnings, row.lineNo)} THEN`);
+          stack.push({ type: "IF", indent: row.indent, endCount: 1 });
+          return;
+        }
+
+        if ((match = line.match(/^for\s+([A-Za-z_]\w*)\s+in\s+range\s*\((.*)\)\s*:\s*$/i))) {
+          const variable = match[1];
+          const bounds = rangeBounds(match[2], row.lineNo);
+          if (!types.has(variable)) remember(variable, "INTEGER");
+
+          if (!bounds) {
+            outputLines.push(`${indent}// TODO: manually convert ${line}`);
+            return;
+          }
+
+          const step = bounds.includeStep ? ` STEP ${bounds.step}` : "";
+          outputLines.push(`${indent}FOR ${variable} ← ${bounds.start} TO ${bounds.end}${step}`);
+          stack.push({ type: "FOR", indent: row.indent, variable });
+          return;
+        }
+
+        if ((match = line.match(/^while\s+(.+)\s*:\s*$/i))) {
+          outputLines.push(`${indent}WHILE ${pyConvertExpression(match[1], warnings, row.lineNo)} DO`);
+          stack.push({ type: "WHILE", indent: row.indent });
+          return;
+        }
+
+        if ((match = line.match(/^def\s+([A-Za-z_]\w*)\s*\((.*?)\)\s*:\s*$/i))) {
+          const parameters = match[2].trim();
+          outputLines.push(`${indent}PROCEDURE ${match[1]}${parameters ? `(${parameters})` : ""}`);
+          if (parameters) {
+            warnings.push(`Line ${row.lineNo}: procedure parameter types are not inferred; add DECLARE statements inside the procedure if required.`);
+          }
+          stack.push({ type: "PROCEDURE", indent: row.indent });
+          return;
+        }
+
+        if (/^return\b/i.test(line)) {
+          const value = line.replace(/^return\s*/i, "");
+          outputLines.push(`${indent}RETURN${value ? " " + pyConvertExpression(value, warnings, row.lineNo) : ""}`);
+          warnings.push(`Line ${row.lineNo}: confirm whether this should be a Cambridge FUNCTION with a RETURNS type.`);
+          return;
+        }
+
+        if (/^print\s*\(/i.test(line)) {
+          const rendered = outputPrint(line, row.lineNo, indent);
+          if (rendered) outputLines.push(rendered);
+          else {
+            warnings.push(`Line ${row.lineNo}: unsupported print syntax.`);
+            outputLines.push(`${indent}// TODO: manually convert ${line}`);
+          }
+          return;
+        }
+
+        if (/^(break|continue)\b/i.test(line)) {
+          warnings.push(`Line ${row.lineNo}: "${line.split(/\s/)[0]}" needs manual conversion to the required Cambridge control flow.`);
+          outputLines.push(`${indent}// TODO: ${line}`);
+          return;
+        }
+
+        if (/^(import|from)\b/i.test(line)) {
+          warnings.push(`Line ${row.lineNo}: Python import statements are not directly represented in basic 2210 pseudocode.`);
+          outputLines.push(`${indent}// TODO: ${line}`);
+          return;
+        }
+
+        if (/^(try|except|finally|with|class|async|await|raise|assert|pass)\b/i.test(line)) {
+          if (/^pass$/i.test(line)) {
+            outputLines.push(`${indent}// PASS`);
+          } else {
+            warnings.push(`Line ${row.lineNo}: "${line.split(/\s/)[0]}" is not converted automatically.`);
+            outputLines.push(`${indent}// TODO: manually convert ${line}`);
+          }
+          return;
+        }
+
+        // Detect Python assignment, including compound assignment.
+        const assignment = pyTopLevelAssignment(line);
+        if (assignment) {
+          const left = line.slice(0, assignment.index).trim();
+          const right = line.slice(assignment.index + (assignment.operator === "=" ? 1 : 2)).trim();
+          const simpleTarget = left.match(/^([A-Za-z_]\w*)$/);
+          const arrayTarget = left.match(/^([A-Za-z_]\w*)\s*\[\s*(.*?)\s*\]$/);
+
+          if (simpleTarget && /\binput\s*\(/i.test(right)) {
+            const name = simpleTarget[1];
+            const promptMatch = right.match(/^(?:(?:int|float|bool|str)\s*\(\s*)?input\s*\(\s*((?:"(?:\\.|[^"])*")|(?:'(?:\\.|[^'])*'))?\s*\)(?:\s*\))?$/i);
+            if (promptMatch) {
+              if (promptMatch[1]) outputLines.push(`${indent}OUTPUT ${promptMatch[1]}`);
+              outputLines.push(`${indent}INPUT ${name}`);
+              return;
+            }
+          }
+
+          const list = simpleTarget ? pyArrayLiteral(right) : null;
+          if (simpleTarget && arrays.has(simpleTarget[1]) && list) {
+            const name = simpleTarget[1];
+            const info = arrays.get(name);
+            if (info.rows > 1) {
+              const rowsLiteral = list.map(item => pyArrayLiteral(item) || []);
+              rowsLiteral.forEach((values, r) => {
+                values.forEach((value, c) => {
+                  outputLines.push(`${indent}${name}[${r}, ${c}] ← ${pyConvertExpression(value, warnings, row.lineNo)}`);
+                });
+              });
+            } else {
+              list.forEach((value, index) => {
+                outputLines.push(`${indent}${name}[${index}] ← ${pyConvertExpression(value, warnings, row.lineNo)}`);
+              });
+            }
+            return;
+          }
+
+          if (arrayTarget) {
+            const targetName = arrayTarget[1];
+            const indexes = arrayTarget[2].split(",").map(v => v.trim());
+            const formattedTarget = indexes.length > 1
+              ? `${targetName}[${pyConvertExpression(indexes[0], warnings, row.lineNo)}, ${pyConvertExpression(indexes[1], warnings, row.lineNo)}]`
+              : `${targetName}[${pyConvertExpression(indexes[0], warnings, row.lineNo)}]`;
+
+            let operator = "←";
+            let value = pyConvertExpression(right, warnings, row.lineNo);
+
+            if (assignment.operator !== "=") {
+              const mathOp = assignment.operator[0];
+              value = `${formattedTarget} ${mathOp} (${value})`;
+            }
+
+            outputLines.push(`${indent}${formattedTarget} ${operator} ${value}`);
+            return;
+          }
+
+          if (simpleTarget) {
+            const name = simpleTarget[1];
+            let value = pyConvertExpression(right, warnings, row.lineNo);
+
+            if (assignment.operator !== "=") {
+              const mathOp = assignment.operator[0];
+              value = `${name} ${mathOp} (${value})`;
+            }
+
+            outputLines.push(`${indent}${name} ← ${value}`);
+            return;
+          }
+
+          if (/[,]/.test(left)) {
+            warnings.push(`Line ${row.lineNo}: multiple-target assignment needs manual conversion.`);
+          } else {
+            warnings.push(`Line ${row.lineNo}: unsupported assignment target "${left}".`);
+          }
+          outputLines.push(`${indent}// TODO: manually convert ${line}`);
+          return;
+        }
+
+        if (/^\w+\s*\.\s*(?:append|extend|pop|sort)\s*\(/i.test(line)) {
+          warnings.push(`Line ${row.lineNo}: Python list method needs manual conversion to array operations.`);
+          outputLines.push(`${indent}// TODO: manually convert ${line}`);
+          return;
+        }
+
+        warnings.push(`Line ${row.lineNo}: unrecognised Python statement.`);
+        outputLines.push(`${indent}// TODO: manually convert ${line}`);
+      });
+
+      while (stack.length) closeTopBlock();
+
+      const declarationLines = declarations.filter(Boolean);
+      const body = outputLines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd();
+
+      const finalLines = [
+        "// Converted from Python to Cambridge O Level Computer Science 2210 pseudocode.",
+        "// Review data types, array bounds and any conversion warnings before use."
+      ];
+
+      if (declarationLines.length) {
+        finalLines.push(...declarationLines, "");
+      }
+
+      finalLines.push(body || "// No convertible statements found.");
+      const code = finalLines.join("\n").replace(/\n{3,}/g, "\n\n");
+
+      return {
+        code,
+        warnings: [...new Set(warnings)]
+      };
+    }
+
+    function openPythonConversionModal() {
+      const currentTab = getActiveTab();
+      if (currentTab && currentTab.kind === "file") {
+        setStatus("Select a Python tab before converting", true);
+        return;
+      }
+
+      const result = pythonTo2210Pseudocode(editor.getValue());
+      document.getElementById("convertedPseudo").value = result.code;
+
+      const warningArea = document.getElementById("convertWarnings");
+      warningArea.innerHTML = "";
+
+      if (result.warnings.length) {
+        warningArea.classList.add("show");
+        const title = document.createElement("strong");
+        title.textContent = "Review these conversion notes:";
+        const list = document.createElement("ul");
+
+        result.warnings.forEach(message => {
+          const item = document.createElement("li");
+          item.textContent = message;
+          list.appendChild(item);
+        });
+
+        warningArea.append(title, list);
+      } else {
+        warningArea.classList.remove("show");
+        warningArea.textContent = "No unsupported constructs were detected by the converter.";
+      }
+
+      const modal = document.getElementById("convertModal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.getElementById("convertedPseudo").focus();
+      setStatus("Pseudocode conversion ready");
+    }
+
+    function closePythonConversionModal() {
+      const modal = document.getElementById("convertModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    async function copyConvertedPseudocode() {
+      const area = document.getElementById("convertedPseudo");
+      try {
+        await navigator.clipboard.writeText(area.value);
+      } catch {
+        area.focus();
+        area.select();
+        document.execCommand("copy");
+      }
+      setStatus("Pseudocode copied");
+    }
+
+    function downloadConvertedPseudocode() {
+      const currentTab = getActiveTab();
+      const sourceName = currentTab ? currentTab.name : "converted.py";
+      let fileName = sourceName.replace(/\.py$/i, "") + ".pseudo";
+      fileName = safeVirtualFileName(fileName);
+
+      const blob = new Blob(
+        [document.getElementById("convertedPseudo").value],
+        { type: "text/plain;charset=utf-8" }
+      );
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        anchor.remove();
+      }, 1200);
+
+      setStatus("Pseudocode downloaded");
+    }
+
+    function openConvertedPseudocodeAsTab() {
+      const area = document.getElementById("convertedPseudo");
+      const currentTab = getActiveTab();
+      let base = currentTab ? currentTab.name.replace(/\.py$/i, "") : "converted";
+      base = base.replace(/\.[^.]+$/, "");
+      let fileName = safeVirtualFileName((base || "converted") + ".pseudo");
+      let suffix = 2;
+
+      while (Object.prototype.hasOwnProperty.call(virtualFiles, fileName)) {
+        fileName = safeVirtualFileName((base || "converted") + "-converted-" + suffix + ".pseudo");
+        suffix++;
+      }
+
+      virtualFiles[fileName] = area.value;
+      saveVirtualFiles();
+      openFileAsTab(fileName);
+      closePythonConversionModal();
+      setStatus("Converted pseudocode opened in a new tab");
     }
 
     function builtinRead(filename) {
@@ -2268,6 +3355,8 @@ os.chdir("/showmik_workspace")
         "Cmd-Enter": runCode,
         "Ctrl-N": newTab,
         "Cmd-N": newTab,
+        "Ctrl-Shift-P": openPythonConversionModal,
+        "Cmd-Shift-P": openPythonConversionModal,
         "Tab": (cm) => {
           if (cm.somethingSelected()) {
             cm.execCommand("indentMore");
@@ -2319,9 +3408,46 @@ os.chdir("/showmik_workspace")
       updateIndentGuides();
     });
 
+    const convertToPseudoBtn = document.getElementById("convertToPseudoBtn");
+    const convertModal = document.getElementById("convertModal");
+    const convertModalClose = document.getElementById("convertModalClose");
+    const convertModalCloseBottom = document.getElementById("convertModalCloseBottom");
+    const convertCopyBtn = document.getElementById("convertCopyBtn");
+    const convertDownloadBtn = document.getElementById("convertDownloadBtn");
+    const convertOpenTabBtn = document.getElementById("convertOpenTabBtn");
+
+    if (convertToPseudoBtn) {
+      convertToPseudoBtn.addEventListener("click", openPythonConversionModal);
+    }
+    if (convertModalClose) convertModalClose.addEventListener("click", closePythonConversionModal);
+    if (convertModalCloseBottom) convertModalCloseBottom.addEventListener("click", closePythonConversionModal);
+    if (convertCopyBtn) convertCopyBtn.addEventListener("click", copyConvertedPseudocode);
+    if (convertDownloadBtn) convertDownloadBtn.addEventListener("click", downloadConvertedPseudocode);
+    if (convertOpenTabBtn) convertOpenTabBtn.addEventListener("click", openConvertedPseudocodeAsTab);
+
+    if (convertModal) {
+      convertModal.addEventListener("click", event => {
+        if (event.target === convertModal) closePythonConversionModal();
+      });
+    }
+
     if (filesBtn) filesBtn.addEventListener("click", showFilesView);
     if (filesViewBtn) filesViewBtn.addEventListener("click", showFilesView);
     if (outputViewBtn) outputViewBtn.addEventListener("click", showOutputView);
+    if (openFromPCTop) openFromPCTop.addEventListener("click", promptForLocalFiles);
+    if (importFromPCBtn) importFromPCBtn.addEventListener("click", promptForLocalFiles);
+    if (localFileInput) {
+      localFileInput.addEventListener("change", async event => {
+        try {
+          await importLocalFiles(event.target.files);
+        } catch (error) {
+          setStatus("File import failed", true);
+          setEngineStatus(error && error.message ? error.message : String(error), true);
+        } finally {
+          localFileInput.value = "";
+        }
+      });
+    }
     if (createTxtBtn) createTxtBtn.addEventListener("click", createVirtualTxt);
     if (refreshFilesBtn) refreshFilesBtn.addEventListener("click", renderFileList);
 
